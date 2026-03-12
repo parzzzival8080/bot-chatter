@@ -38,7 +38,7 @@ export function TelegramSettings() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const promises: Promise<void>[] = [];
+      const promises: Promise<unknown>[] = [];
       if (token.trim()) {
         promises.push(
           setSetting({ key: "TELEGRAM_BOT_TOKEN", value: token.trim() })

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 
-type ConfigId = ConfigId | Id<"platforms">;
+type ConfigId = Id<"subjects"> | Id<"coins"> | Id<"platforms">;
 
 interface ConfigItem {
   _id: ConfigId;
