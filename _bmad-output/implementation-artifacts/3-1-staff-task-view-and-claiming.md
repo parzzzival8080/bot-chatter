@@ -1,6 +1,6 @@
 # Story 3.1: Staff Task View & Claiming
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,29 +20,29 @@ so that I can take ownership of work and notify the team.
 
 ## Tasks / Subtasks
 
-- [ ] Create pending tasks query (AC: #1)
-  - [ ] In `convex/tasks.ts`, add `listPending` query filtering `status === "pending"`
-  - [ ] Use `by_status` index for efficient querying
-  - [ ] Require staff role via `requireRole(ctx, "staff")`
-  - [ ] Return: subject, body, senderName, createdAt, _id
-- [ ] Create claim task mutation (AC: #2, #3, #5, #6)
-  - [ ] In `convex/tasks.ts`, add `claim` mutation accepting `taskId`
-  - [ ] Require staff role via `requireRole(ctx, "staff")`
-  - [ ] Read task by ID, verify `status === "pending"` (if not, throw `ALREADY_CLAIMED` ConvexError)
-  - [ ] Update task: `status: "claimed"`, `claimedBy: userId`, `claimedAt: Date.now()`
-  - [ ] Convex mutations are transactional — automatic optimistic locking
-  - [ ] Schedule Telegram message: `✅ ${staffName} acknowledged ${senderName} ${subject}` (AC: #4)
-- [ ] Build staff tasks page (AC: #1, #7)
-  - [ ] Create `app/(dashboard)/page.tsx` as default dashboard view (or dedicated `/tasks` route)
-  - [ ] Use `useQuery(api.tasks.listPending)` for reactive data
-  - [ ] Gate access with staff role check
-- [ ] Build TaskTable component (AC: #1, #2)
-  - [ ] Create `components/tasks/TaskTable.tsx` using shadcn/ui Table
-  - [ ] Columns: Subject, Body (truncated), Sender, Created, Actions
-  - [ ] "Claim" button in Actions column for each pending task
-  - [ ] On claim: call `useMutation(api.tasks.claim)` with task ID
-  - [ ] Show error toast if `ALREADY_CLAIMED`
-  - [ ] Table updates reactively via Convex subscription (no manual refresh)
+- [x] Create pending tasks query (AC: #1)
+  - [x] In `convex/tasks.ts`, add `listPending` query filtering `status === "pending"`
+  - [x] Use `by_status` index for efficient querying
+  - [x] Require staff role via `requireRole(ctx, ["staff", "manager", "admin"])`
+  - [x] Return: subject, body, senderName, createdAt, _id
+- [x] Create claim task mutation (AC: #2, #3, #5, #6)
+  - [x] In `convex/tasks.ts`, add `claim` mutation accepting `taskId`
+  - [x] Require staff role via `requireRole(ctx, ["staff", "manager", "admin"])`
+  - [x] Read task by ID, verify `status === "pending"` (if not, throw `ALREADY_CLAIMED` ConvexError)
+  - [x] Update task: `status: "claimed"`, `claimedBy: userId`, `claimedAt: Date.now()`
+  - [x] Convex mutations are transactional — automatic optimistic locking
+  - [x] Schedule Telegram message: `✅ ${staffName} acknowledged ${senderName} ${subject}` (AC: #4)
+- [x] Build staff tasks page (AC: #1, #7)
+  - [x] Create `app/(dashboard)/page.tsx` as default dashboard view
+  - [x] Use `useQuery(api.tasks.listPending)` for reactive data
+  - [x] Gate access with role check via role-based view switching
+- [x] Build PendingTaskTable component (AC: #1, #2)
+  - [x] Create `components/tasks/PendingTaskTable.tsx` using shadcn/ui Table
+  - [x] Columns: Subject, Body (truncated to 50 chars), Sender, Created, Actions
+  - [x] "Claim" button in Actions column for each pending task
+  - [x] On claim: call `useMutation(api.tasks.claim)` with task ID
+  - [x] Show error toast if `ALREADY_CLAIMED`
+  - [x] Table updates reactively via Convex subscription (no manual refresh)
 
 ## Dev Notes
 
@@ -60,8 +60,7 @@ convex/
   tasks.ts                    # Add listPending query, claim mutation
 components/
   tasks/
-    TaskTable.tsx             # Reusable task table component
-    TaskRow.tsx               # Individual task row (optional)
+    PendingTaskTable.tsx      # Pending task table component
 ```
 
 ### References
@@ -74,6 +73,16 @@ components/
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6
 ### Debug Log References
+N/A
 ### Completion Notes List
+- Extended requireRole to allow staff, manager, and admin roles (not just staff) per implementation instructions
+- Installed shadcn tabs component for dashboard tab navigation
+- PendingTaskTable shows error toast on ALREADY_CLAIMED ConvexError
+- Dashboard page uses role-based view switching (staff vs manager/admin)
 ### File List
+- convex/tasks.ts (listPending query, claim mutation)
+- components/tasks/PendingTaskTable.tsx
+- app/(dashboard)/page.tsx
+- components/ui/tabs.tsx (shadcn install)

@@ -1,6 +1,6 @@
 # Story 1.3: Admin Role Management
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,33 +20,33 @@ so that I can control who has access to which features.
 
 ## Tasks / Subtasks
 
-- [ ] Create admin user list query (AC: #1)
-  - [ ] In `convex/users.ts`, add `list` query returning all users (requires admin role via `requireRole`)
-  - [ ] Return fields: `_id`, `name`, `email`, `role`, `createdAt`
-- [ ] Create role update mutation (AC: #2, #4, #5)
-  - [ ] In `convex/users.ts`, add `updateRole` mutation accepting `userId` and `role`
-  - [ ] Validate role is one of: `"admin"`, `"manager"`, `"staff"`
-  - [ ] Update Convex `users` table with new role
-  - [ ] Call Clerk Backend API to update `publicMetadata.role` via Convex action
-  - [ ] Create `convex/clerkAdmin.ts` internal action that uses Clerk Backend SDK to set `publicMetadata`
-- [ ] Build admin user management page (AC: #1, #7)
-  - [ ] Create `app/(dashboard)/admin/users/page.tsx`
-  - [ ] Use shadcn/ui `Table` component for user list
-  - [ ] Columns: Name, Email, Role (badge), Actions (role dropdown)
-  - [ ] Add role-gated access check (redirect non-admins)
-- [ ] Build role assignment UI (AC: #2, #4)
-  - [ ] Create `components/admin/UserRoleSelect.tsx` with shadcn/ui `Select` dropdown
-  - [ ] Options: Admin, Manager, Staff
-  - [ ] On change: call `updateRole` mutation
-  - [ ] Show success toast on completion
-  - [ ] Show current role as selected value
-- [ ] Enforce API-level authorization (AC: #3, #7)
-  - [ ] All user management queries/mutations use `requireRole(ctx, "admin")`
-  - [ ] Test that non-admin calls receive `UNAUTHORIZED` ConvexError
-- [ ] Create admin navigation (AC: #1)
-  - [ ] Create `components/layout/Navbar.tsx` with navigation links
-  - [ ] Show admin-only links (Users, Settings) conditionally based on role
-  - [ ] Add to `app/(dashboard)/layout.tsx`
+- [x] Create admin user list query (AC: #1)
+  - [x] In `convex/users.ts`, add `list` query returning all users (requires admin role via `requireRole`)
+  - [x] Return fields: `_id`, `name`, `email`, `role`, `createdAt`
+- [x] Create role update mutation (AC: #2, #4, #5)
+  - [x] In `convex/users.ts`, add `updateRole` mutation accepting `userId` and `role`
+  - [x] Validate role is one of: `"admin"`, `"manager"`, `"staff"`
+  - [x] Update Convex `users` table with new role
+  - [x] Call Clerk Backend API to update `publicMetadata.role` via Convex action
+  - [x] Create `convex/clerkAdmin.ts` internal action that uses Clerk Backend SDK to set `publicMetadata`
+- [x] Build admin user management page (AC: #1, #7)
+  - [x] Create `app/(dashboard)/admin/users/page.tsx`
+  - [x] Use shadcn/ui `Table` component for user list
+  - [x] Columns: Name, Email, Role (badge), Actions (role dropdown)
+  - [x] Add role-gated access check (redirect non-admins)
+- [x] Build role assignment UI (AC: #2, #4)
+  - [x] Create `components/admin/UserRoleSelect.tsx` with shadcn/ui `Select` dropdown
+  - [x] Options: Admin, Manager, Staff
+  - [x] On change: call `updateRole` mutation
+  - [x] Show success toast on completion
+  - [x] Show current role as selected value
+- [x] Enforce API-level authorization (AC: #3, #7)
+  - [x] All user management queries/mutations use `requireRole(ctx, "admin")`
+  - [x] Test that non-admin calls receive `UNAUTHORIZED` ConvexError
+- [x] Create admin navigation (AC: #1)
+  - [x] Create `components/layout/Navbar.tsx` with navigation links
+  - [x] Show admin-only links (Users, Settings) conditionally based on role
+  - [x] Add to `app/(dashboard)/layout.tsx`
 
 ## Dev Notes
 
@@ -80,6 +80,19 @@ components/
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6
 ### Debug Log References
 ### Completion Notes List
+- clerkAdmin.ts uses internalAction with createClerkClient from @clerk/backend
+- updateRole mutation schedules Clerk sync via ctx.scheduler.runAfter(0, ...)
+- Navbar conditionally shows admin links based on user role
+- Admin users page has client-side role check + server-side requireRole on queries
+- First admin must be bootstrapped via Clerk dashboard publicMetadata
 ### File List
+- convex/users.ts (modified — added list, updateRole)
+- convex/clerkAdmin.ts (created)
+- app/(dashboard)/admin/users/page.tsx (created)
+- app/(dashboard)/layout.tsx (modified — added Navbar)
+- components/admin/UserRoleSelect.tsx (created)
+- components/layout/Navbar.tsx (created)
+- app/layout.tsx (modified — added Toaster)

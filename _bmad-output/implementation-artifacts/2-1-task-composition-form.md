@@ -1,6 +1,6 @@
 # Story 2.1: Task Composition Form
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -22,36 +22,36 @@ so that I can dispatch work instructions to my team.
 
 ## Tasks / Subtasks
 
-- [ ] Define Convex schema for tasks, subjects, coins (AC: #5, #6, #7)
-  - [ ] In `convex/schema.ts`, add `tasks` table with all fields and indexes: `by_status` on `["status"]`, `by_senderId` on `["senderId"]`, `by_claimedBy` on `["claimedBy"]`
-  - [ ] Add `subjects` table with `name` (string), `isActive` (boolean), `createdAt` (number)
-  - [ ] Add `coins` table with `name` (string), `isActive` (boolean), `createdAt` (number)
-- [ ] Create subjects/coins queries and seed data (AC: #8)
-  - [ ] Create `convex/subjects.ts` with `listActive` query (returns subjects where `isActive: true`)
-  - [ ] Create `convex/coins.ts` with `listActive` query
-  - [ ] Create `convex/seed.ts` with seed function to populate initial subjects (e.g., "General", "Urgent", "Follow-up")
-  - [ ] Run seed on first deploy or provide manual seed script
-- [ ] Create task compose form page (AC: #1, #9)
-  - [ ] Create `app/(dashboard)/compose/page.tsx`
-  - [ ] Gate with `requireRole(['admin', 'manager'])` check in component
-  - [ ] Use shadcn/ui components: Select, Input, Textarea, Button, Switch/Toggle
-- [ ] Build TaskComposeForm component (AC: #1, #2, #3, #4)
-  - [ ] Create `components/tasks/TaskComposeForm.tsx`
-  - [ ] State: `taskType` ("simple" | "stressTest"), form fields
-  - [ ] Toggle component to switch between simple and stress test mode
-  - [ ] Simple mode: subject Select + body Textarea
-  - [ ] Stress test mode: + coin Select + startTime DateTimePicker + endTime DateTimePicker
-  - [ ] Zod validation schema for both modes
-  - [ ] Form submission calls task creation mutation
-- [ ] Create Zod validation schemas (AC: #3, #4)
-  - [ ] Create `lib/validations/task.ts` with `simpleTaskSchema` and `stressTestTaskSchema`
-  - [ ] Simple: `{ subject: z.string().min(1), body: z.string().min(1) }`
-  - [ ] Stress test: extends simple + `{ coin: z.string().min(1), startTime: z.date(), endTime: z.date() }` with `.refine(endTime > startTime)`
-- [ ] Create task creation mutation (AC: #5)
-  - [ ] In `convex/tasks.ts`, create `create` mutation with Convex argument validators
-  - [ ] Validate role with `requireRole(ctx, ["admin", "manager"])`
-  - [ ] Save task with `status: "pending"`, `senderId`, `senderName`, `createdAt: Date.now()`
-  - [ ] Return task ID (Telegram dispatch is Story 2.2)
+- [x] Define Convex schema for tasks, subjects, coins (AC: #5, #6, #7)
+  - [x] In `convex/schema.ts`, add `tasks` table with all fields and indexes: `by_status` on `["status"]`, `by_senderId` on `["senderId"]`, `by_claimedBy` on `["claimedBy"]`
+  - [x] Add `subjects` table with `name` (string), `isActive` (boolean), `createdAt` (number)
+  - [x] Add `coins` table with `name` (string), `isActive` (boolean), `createdAt` (number)
+- [x] Create subjects/coins queries and seed data (AC: #8)
+  - [x] Create `convex/subjects.ts` with `listActive` query (returns subjects where `isActive: true`)
+  - [x] Create `convex/coins.ts` with `listActive` query
+  - [x] Create `convex/seed.ts` with seed function to populate initial subjects (e.g., "General", "Urgent", "Follow-up")
+  - [x] Run seed on first deploy or provide manual seed script
+- [x] Create task compose form page (AC: #1, #9)
+  - [x] Create `app/(dashboard)/compose/page.tsx`
+  - [x] Gate with `requireRole(['admin', 'manager'])` check in component
+  - [x] Use shadcn/ui components: Select, Input, Textarea, Button, Switch/Toggle
+- [x] Build TaskComposeForm component (AC: #1, #2, #3, #4)
+  - [x] Create `components/tasks/TaskComposeForm.tsx`
+  - [x] State: `taskType` ("simple" | "stressTest"), form fields
+  - [x] Toggle component to switch between simple and stress test mode
+  - [x] Simple mode: subject Select + body Textarea
+  - [x] Stress test mode: + coin Select + startTime DateTimePicker + endTime DateTimePicker
+  - [x] Zod validation schema for both modes
+  - [x] Form submission calls task creation mutation
+- [x] Create Zod validation schemas (AC: #3, #4)
+  - [x] Create `lib/validations/task.ts` with `simpleTaskSchema` and `stressTestTaskSchema`
+  - [x] Simple: `{ subject: z.string().min(1), body: z.string().min(1) }`
+  - [x] Stress test: extends simple + `{ coin: z.string().min(1), startTime: z.number(), endTime: z.number() }` with `.refine(endTime > startTime)`
+- [x] Create task creation mutation (AC: #5)
+  - [x] In `convex/tasks.ts`, create `create` mutation with Convex argument validators
+  - [x] Validate role with `requireRole(ctx, ["admin", "manager"])`
+  - [x] Save task with `status: "pending"`, `senderId`, `senderName`, `createdAt: Date.now()`
+  - [x] Return task ID (Telegram dispatch is Story 2.2)
 
 ## Dev Notes
 
@@ -75,7 +75,6 @@ convex/
 components/
   tasks/
     TaskComposeForm.tsx                  # Main compose form
-    TaskTypeToggle.tsx                   # Simple/stress test toggle
 lib/
   validations/
     task.ts                              # Zod schemas
@@ -91,6 +90,26 @@ lib/
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6
+
 ### Debug Log References
+N/A
+
 ### Completion Notes List
+- Schema extended with tasks, subjects, coins tables (settings added in 2.2)
+- Seed mutation checks for existing data before inserting to avoid duplicates
+- Zod v4 used (installed as latest); uses `message` param instead of `required_error`
+- DateTime inputs use native `<input type="datetime-local" />` styled with shadcn Input component
+- Switch component from shadcn/base-ui used for task type toggle
+- Client-side role check in compose page denies non-manager/non-admin users
+- Server-side role check via requireRole in create mutation
+
 ### File List
+- convex/schema.ts
+- convex/tasks.ts
+- convex/subjects.ts
+- convex/coins.ts
+- convex/seed.ts
+- app/(dashboard)/compose/page.tsx
+- components/tasks/TaskComposeForm.tsx
+- lib/validations/task.ts

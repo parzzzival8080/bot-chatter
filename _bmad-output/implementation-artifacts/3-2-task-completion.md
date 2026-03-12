@@ -1,6 +1,6 @@
 # Story 3.2: Task Completion
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -18,34 +18,32 @@ so that the team knows the work is finished.
 
 ## Tasks / Subtasks
 
-- [ ] Create complete task mutation (AC: #1, #2, #3, #5)
-  - [ ] In `convex/tasks.ts`, add `complete` mutation accepting `taskId`
-  - [ ] Require staff role via `requireRole(ctx, "staff")`
-  - [ ] Read task by ID, verify `status === "claimed"` and `claimedBy === currentUserId`
-  - [ ] If not claimer: throw `ConvexError({ code: "UNAUTHORIZED", message: "Only the claimer can complete this task" })`
-  - [ ] Update task: `status: "done"`, `completedAt: Date.now()`
-  - [ ] Schedule Telegram message: `🎉 ${staffName} is done with the ${senderName} ${subject} task`
-- [ ] Create my-tasks query (AC: #4)
-  - [ ] In `convex/tasks.ts`, add `listMyTasks` query
-  - [ ] Filter tasks where `claimedBy === currentUserId`
-  - [ ] Use `by_claimedBy` index
-  - [ ] Return both claimed and done tasks for the current user
-  - [ ] Require staff role
-- [ ] Update TaskTable for completion actions (AC: #1)
-  - [ ] In `TaskTable.tsx`, add "Mark Done" button for tasks with `status === "claimed"` and `claimedBy === currentUser`
-  - [ ] Disable button / hide for tasks claimed by others
-  - [ ] On click: call `useMutation(api.tasks.complete)`
-  - [ ] Show success toast on completion
-- [ ] Build My Tasks view (AC: #4)
-  - [ ] Create `components/tasks/MyTasks.tsx` component
-  - [ ] Use `useQuery(api.tasks.listMyTasks)` for reactive data
-  - [ ] Show table with columns: Subject, Body, Status (claimed/done), Claimed At, Completed At
-  - [ ] Add tab or toggle on staff dashboard to switch between "Pending Tasks" and "My Tasks"
+- [x] Create complete task mutation (AC: #1, #2, #3, #5)
+  - [x] In `convex/tasks.ts`, add `complete` mutation accepting `taskId`
+  - [x] Require staff role via `requireRole(ctx, ["staff", "manager", "admin"])`
+  - [x] Read task by ID, verify `status === "claimed"` and `claimedBy === currentUserId`
+  - [x] If not claimer: throw `ConvexError({ code: "UNAUTHORIZED", message: "Only the claimer can complete this task" })`
+  - [x] Update task: `status: "done"`, `completedAt: Date.now()`
+  - [x] Schedule Telegram message: `🎉 ${staffName} is done with the ${senderName} ${subject} task`
+- [x] Create my-tasks query (AC: #4)
+  - [x] In `convex/tasks.ts`, add `listMyTasks` query
+  - [x] Filter tasks where `claimedBy === currentUserId`
+  - [x] Use `by_claimedBy` index
+  - [x] Return both claimed and done tasks for the current user
+  - [x] Require staff role via `requireRole(ctx, ["staff", "manager", "admin"])`
+- [x] Build MyTasks component (AC: #4)
+  - [x] Create `components/tasks/MyTasks.tsx` component
+  - [x] Use `useQuery(api.tasks.listMyTasks)` for reactive data
+  - [x] Show table with columns: Subject, Body, Status (badge: claimed=secondary, done=default), Claimed At, Completed At, Actions
+  - [x] "Mark Done" button for claimed tasks only
+  - [x] Success toast on completion, error toast on unauthorized
+- [x] Update dashboard page (AC: #4)
+  - [x] In `app/(dashboard)/page.tsx`, add shadcn Tabs for staff: "Pending Tasks" and "My Tasks"
 
 ## Dev Notes
 
 - **Claimer-only completion:** The mutation must verify that the requesting user's ID matches the task's `claimedBy` field. This prevents staff from completing each other's tasks.
-- **Status badge styling:** Use shadcn/ui Badge with variants: `pending` (yellow), `claimed` (blue), `done` (green).
+- **Status badge styling:** Use shadcn/ui Badge with variants: `pending` (outline), `claimed` (secondary), `done` (default).
 - **Dashboard tabs:** The staff dashboard page can have two tabs/views: "Pending Tasks" (from Story 3.1) and "My Tasks". Use shadcn/ui Tabs component.
 - **Telegram message format:** Must exactly match: `🎉 [Staff Name] is done with the [Sender Name] [Subject] task`
 
@@ -56,7 +54,6 @@ convex/
   tasks.ts                    # Add complete mutation, listMyTasks query
 components/
   tasks/
-    TaskTable.tsx             # Add "Mark Done" button for claimed tasks
     MyTasks.tsx               # Staff's own tasks view
 app/(dashboard)/
   page.tsx                    # Add tabs for Pending / My Tasks
@@ -71,6 +68,14 @@ app/(dashboard)/
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6
 ### Debug Log References
+N/A
 ### Completion Notes List
+- complete mutation validates both status=claimed and claimedBy match before allowing completion
+- MyTasks component shows badge with secondary variant for claimed, default for done
+- Staff dashboard uses shadcn Tabs with "Pending Tasks" and "My Tasks" tabs
 ### File List
+- convex/tasks.ts (complete mutation, listMyTasks query)
+- components/tasks/MyTasks.tsx
+- app/(dashboard)/page.tsx

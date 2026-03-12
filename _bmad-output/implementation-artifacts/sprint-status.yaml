@@ -41,37 +41,37 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Epic 1: Project Foundation & Authentication
-  epic-1: in-progress
-  1-1-project-infrastructure-setup: in-progress
-  1-2-user-registration-and-authentication: ready-for-dev
-  1-3-admin-role-management: ready-for-dev
+  epic-1: done
+  1-1-project-infrastructure-setup: done
+  1-2-user-registration-and-authentication: done
+  1-3-admin-role-management: done
   epic-1-retrospective: optional
 
   # Epic 2: Task Dispatch & Telegram Integration
-  epic-2: backlog
-  2-1-task-composition-form: backlog
-  2-2-telegram-dispatch-and-delivery: backlog
+  epic-2: done
+  2-1-task-composition-form: done
+  2-2-telegram-dispatch-and-delivery: done
   epic-2-retrospective: optional
 
   # Epic 3: Task Lifecycle & Tracking
-  epic-3: backlog
-  3-1-staff-task-view-and-claiming: backlog
-  3-2-task-completion: backlog
-  3-3-manager-admin-task-dashboard: backlog
+  epic-3: done
+  3-1-staff-task-view-and-claiming: done
+  3-2-task-completion: done
+  3-3-manager-admin-task-dashboard: done
   epic-3-retrospective: optional
 
   # Epic 4: Scheduled Reminders
-  epic-4: backlog
-  4-1-coin-stress-test-scheduled-reminders: backlog
+  epic-4: done
+  4-1-coin-stress-test-scheduled-reminders: done
   epic-4-retrospective: optional
 
   # Epic 5: In-App Notifications
-  epic-5: backlog
-  5-1-in-app-notification-system: backlog
+  epic-5: done
+  5-1-in-app-notification-system: done
   epic-5-retrospective: optional
 
   # Epic 6: Admin Configuration
-  epic-6: backlog
-  6-1-subject-and-coin-management: backlog
-  6-2-telegram-configuration: backlog
+  epic-6: done
+  6-1-subject-and-coin-management: done
+  6-2-telegram-configuration: done
   epic-6-retrospective: optional

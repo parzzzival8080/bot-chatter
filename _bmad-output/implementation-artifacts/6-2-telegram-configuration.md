@@ -1,6 +1,6 @@
 # Story 6.2: Telegram Configuration
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,46 +20,46 @@ so that I can manage Telegram integration without redeploying the app.
 
 ## Tasks / Subtasks
 
-- [ ] Create settings CRUD mutations (AC: #3, #6, #7)
-  - [ ] In `convex/settings.ts`, add `set` mutation — requires admin role, upserts setting by key
-  - [ ] Accept `{ key: string, value: string }`, set `updatedAt: Date.now()`
-  - [ ] Add `get` query — requires admin role, returns setting by key
-  - [ ] Add `getForDisplay` query — returns masked value for API key (show last 4 chars only)
-  - [ ] Note: `getByKey` internal query (from Story 2.2) is separate — no role check, for internal use by telegram action
-- [ ] Build Telegram settings section (AC: #1, #2)
-  - [ ] Create `components/admin/TelegramSettings.tsx`
-  - [ ] Two input fields: Bot API Token (password/masked input) and Chat ID (text input)
-  - [ ] Display current values: API key masked (e.g., `••••••••1234`), chat ID shown normally
-  - [ ] "Save" button to update both settings
-  - [ ] "Test" button (optional) to send a test message using current settings
-  - [ ] Use shadcn/ui: Card, Input, Button, Label
-- [ ] Integrate into admin settings page (AC: #1)
-  - [ ] Add TelegramSettings component to `app/(dashboard)/admin/settings/page.tsx`
-  - [ ] Place in its own section/card below subject/coin management
-- [ ] Verify env variable fallback (AC: #5)
-  - [ ] Ensure `convex/telegram.ts` `sendMessage` action reads from settings table first, falls back to env vars
-  - [ ] This should already work from Story 2.2's implementation
-  - [ ] Verify: if no settings row exists for `TELEGRAM_BOT_TOKEN`, use `process.env.TELEGRAM_BOT_TOKEN`
-- [ ] Security validation (AC: #3, #7)
-  - [ ] Settings `set` mutation requires admin role
-  - [ ] Settings `get` query requires admin role
-  - [ ] The `getByKey` internal query (used by telegram action) has no role check — it's internal only
-  - [ ] Bot token value never returned to client in full (only masked version)
+- [x] Create settings CRUD mutations (AC: #3, #6, #7)
+  - [x] In `convex/settings.ts`, add `set` mutation — requires admin role, upserts setting by key
+  - [x] Accept `{ key: string, value: string }`, set `updatedAt: Date.now()`
+  - [x] Add `get` query — requires admin role, returns setting by key
+  - [x] Add `getForDisplay` query — returns masked value for API key (show last 4 chars only)
+  - [x] Note: `getByKey` internal query (from Story 2.2) is separate — no role check, for internal use by telegram action
+- [x] Build Telegram settings section (AC: #1, #2)
+  - [x] Create `components/admin/TelegramSettings.tsx`
+  - [x] Two input fields: Bot API Token (password/masked input) and Chat ID (text input)
+  - [x] Display current values: API key masked (e.g., `••••••••1234`), chat ID shown normally
+  - [x] "Save" button to update both settings
+  - [x] "Send Test" button to send a test message using current settings
+  - [x] Uses shadcn/ui: Card, Input, Button, Label
+- [x] Integrate into admin settings page (AC: #1)
+  - [x] Add TelegramSettings component to `app/(dashboard)/admin/settings/page.tsx`
+  - [x] Placed in its own card section below subject/coin management
+- [x] Verify env variable fallback (AC: #5)
+  - [x] `convex/telegram.ts` `sendMessage` action reads from settings table first, falls back to env vars
+  - [x] Already implemented in Story 2.2
+- [x] Security validation (AC: #3, #7)
+  - [x] Settings `set` mutation requires admin role
+  - [x] Settings `get` query requires admin role
+  - [x] The `getByKey` internal query (used by telegram action) has no role check — it's internal only
+  - [x] Bot token value never returned to client in full (only masked version via getForDisplay)
+- [x] Create test message mutation
+  - [x] `testTelegram` mutation requires admin role, schedules test message via telegram.sendMessage
 
 ## Dev Notes
 
 - **Masked display:** When fetching the API key for display, return only the last 4 characters: `"••••••••" + value.slice(-4)`. Never send the full token to the client.
 - **Settings table reuse:** The `settings` table was defined in Story 2.2 schema. This story adds the admin UI for managing its values and the admin-facing queries.
 - **Internal vs admin queries:** `getByKey` (internal, no auth) is used by `sendTelegramMessage` action. `get` (admin role required) is used by the admin UI. Two separate query functions.
-- **Test message feature (optional):** A "Send Test Message" button that triggers a test Telegram message helps admins verify configuration. Use `ctx.scheduler.runAfter(0, internal.telegram.sendMessage, { message: "🔧 Test message from bot-chatter admin" })`.
-- **Upsert pattern:** The `set` mutation should check if a setting with the key exists. If yes, update value + updatedAt. If no, insert new record.
+- **Upsert pattern:** The `set` mutation checks if a setting with the key exists. If yes, updates value + updatedAt. If no, inserts new record.
 
 ### Project Structure Notes
 
 ```
-app/(dashboard)/admin/settings/page.tsx  # Add Telegram settings section
+app/(dashboard)/admin/settings/page.tsx  # Admin settings page (Telegram section added)
 convex/
-  settings.ts                             # Add set mutation, get/getForDisplay queries
+  settings.ts                             # set mutation, get/getForDisplay queries, testTelegram mutation
 components/
   admin/
     TelegramSettings.tsx                  # Telegram config UI
@@ -76,6 +76,18 @@ components/
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6
 ### Debug Log References
+N/A
 ### Completion Notes List
+- Added set mutation with upsert pattern, get query, getForDisplay query (masks tokens), and testTelegram mutation to convex/settings.ts
+- Built TelegramSettings component with password input for token, text input for chat ID, save and test buttons
+- Integrated into admin settings page below subject/coin management sections
+- All admin queries/mutations gated with requireRole(ctx, "admin")
+- Token masking: getForDisplay returns "••••••••" + last 4 chars for TOKEN keys
+- Test message uses ctx.scheduler.runAfter to invoke internal telegram.sendMessage
 ### File List
+- convex/settings.ts
+- components/admin/TelegramSettings.tsx
+- app/(dashboard)/admin/settings/page.tsx
+- components/ui/label.tsx (installed via shadcn)

@@ -1,6 +1,6 @@
 # Story 4.1: Coin Stress Test Scheduled Reminders
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -18,27 +18,27 @@ so that the team is prepared and aware of timing windows.
 
 ## Tasks / Subtasks
 
-- [ ] Create scheduled reminder functions (AC: #1, #2, #3)
-  - [ ] Create `convex/reminders.ts` with two internal functions:
+- [x] Create scheduled reminder functions (AC: #1, #2, #3)
+  - [x] Create `convex/reminders.ts` with two internal functions:
     - `sendStartReminder` — accepts `taskId`, reads task, sends start Telegram message
     - `sendEndReminder` — accepts `taskId`, reads task, sends end Telegram message
-  - [ ] Both use `internal.telegram.sendMessage` for delivery (reuses shared action with retry)
-  - [ ] Message formats:
+  - [x] Both use `internal.telegram.sendMessage` for delivery (reuses shared action with retry)
+  - [x] Message formats:
     - Start: `⏰ Reminder: Coin stress test ${subject} for ${coin} is starting now!`
     - End: `⏰ Reminder: Coin stress test ${subject} for ${coin} has ended!`
-- [ ] Update task create mutation to schedule reminders (AC: #1)
-  - [ ] In `convex/tasks.ts`, update `create` mutation
-  - [ ] After saving a stress test task, schedule both reminders:
+- [x] Update task create mutation to schedule reminders (AC: #1)
+  - [x] In `convex/tasks.ts`, update `create` mutation
+  - [x] After saving a stress test task, schedule both reminders:
     - `ctx.scheduler.runAt(startTime, internal.reminders.sendStartReminder, { taskId })`
     - `ctx.scheduler.runAt(endTime, internal.reminders.sendEndReminder, { taskId })`
-  - [ ] Only schedule for tasks with `type === "stressTest"` (skip for simple tasks)
-- [ ] Handle edge cases (AC: #4)
-  - [ ] If start time is in the past (already passed), send reminder immediately
-  - [ ] If task is deleted or completed before reminder fires, check task still exists in reminder function
-  - [ ] Log warning if task not found when reminder fires (don't throw)
-- [ ] Resolve coin name in reminder messages (AC: #2, #3)
-  - [ ] Reminder functions need to look up coin name from `coins` table using task's `coinId`
-  - [ ] Also look up subject name if stored as reference
+  - [x] Only schedule for tasks with `type === "stressTest"` (skip for simple tasks)
+- [x] Handle edge cases (AC: #4)
+  - [x] If start time is in the past (already passed), send reminder immediately
+  - [x] If task is deleted or completed before reminder fires, check task still exists in reminder function
+  - [x] Log warning if task not found when reminder fires (don't throw)
+- [x] Resolve coin name in reminder messages (AC: #2, #3)
+  - [x] Reminder functions need to look up coin name from `coins` table using task's `coinId`
+  - [x] Also look up subject name if stored as reference
 
 ## Dev Notes
 
@@ -66,6 +66,19 @@ convex/
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6
+
 ### Debug Log References
+N/A
+
 ### Completion Notes List
+- Created `convex/reminders.ts` with `sendStartReminder` and `sendEndReminder` internalAction functions
+- Both functions read the task via `internal.tasks.getById` internalQuery, validate it exists and is a stressTest, then dispatch via `ctx.runAction(internal.telegram.sendMessage, ...)`
+- Updated `convex/tasks.ts` create mutation to schedule reminders for stressTest tasks using `ctx.scheduler.runAt`
+- Added past-time check: if startTime/endTime is in the past, uses `ctx.scheduler.runAfter(0, ...)` instead
+- Added `getById` internalQuery to `convex/tasks.ts` for reminder functions to read tasks
+- Subject and coin are stored as denormalized strings on the task, so no additional lookups needed
+
 ### File List
+- convex/reminders.ts (new)
+- convex/tasks.ts (modified)

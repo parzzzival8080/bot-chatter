@@ -1,6 +1,6 @@
 # Story 5.1: In-App Notification System
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,41 +20,41 @@ so that I stay informed without needing to check Telegram.
 
 ## Tasks / Subtasks
 
-- [ ] Create notifications table in schema (AC: #2)
-  - [ ] In `convex/schema.ts`, add `notifications` table:
+- [x] Create notifications table in schema (AC: #2)
+  - [x] In `convex/schema.ts`, add `notifications` table:
     - `userId` (v.id("users")), `type` (v.string()), `message` (v.string()), `taskId` (v.id("tasks")), `isRead` (v.boolean()), `createdAt` (v.number())
-  - [ ] Add indexes: `.index("by_userId", ["userId"])`, `.index("by_userId_isRead", ["userId", "isRead"])`
-- [ ] Create notification helper function (AC: #1, #3, #4)
-  - [ ] In `convex/notifications.ts`, create `createForRole` internal mutation
-  - [ ] Accepts: `role` (or array of roles), `type`, `message`, `taskId`
-  - [ ] Queries `users` table for all users with matching role(s)
-  - [ ] Creates a notification record for each matching user
-- [ ] Integrate notifications into task mutations (AC: #1, #3, #4)
-  - [ ] In `convex/tasks.ts` `create` mutation: after saving task, call `createForRole` for staff users with type `"task_dispatched"`
-  - [ ] In `convex/tasks.ts` `claim` mutation: call `createForRole` for admin + manager users with type `"task_claimed"`
-  - [ ] In `convex/tasks.ts` `complete` mutation: call `createForRole` for admin + manager users with type `"task_completed"`
-- [ ] Create notification queries (AC: #5, #6)
-  - [ ] In `convex/notifications.ts`, add `listForUser` query — returns current user's notifications ordered by `createdAt` desc
-  - [ ] Add `countUnread` query — returns count of `isRead: false` for current user
-  - [ ] Both use `by_userId` index
-- [ ] Create notification mutations (AC: #7)
-  - [ ] In `convex/notifications.ts`, add `markAsRead` mutation — sets `isRead: true` for a single notification
-  - [ ] Add `markAllAsRead` mutation — sets `isRead: true` for all of current user's unread notifications
-- [ ] Build NotificationBadge component (AC: #5)
-  - [ ] Create `components/notifications/NotificationBadge.tsx`
-  - [ ] Use `useQuery(api.notifications.countUnread)` for reactive count
-  - [ ] Display badge with count on bell icon in Navbar
-  - [ ] Badge hidden when count is 0
-- [ ] Build NotificationList component (AC: #6, #7)
-  - [ ] Create `components/notifications/NotificationList.tsx`
-  - [ ] Use `useQuery(api.notifications.listForUser)` for reactive list
-  - [ ] Show as dropdown/popover from the bell icon in Navbar
-  - [ ] Each notification shows: type icon, message, timestamp, read/unread state
-  - [ ] Click to mark individual as read
-  - [ ] "Mark all as read" button at top
-- [ ] Integrate into Navbar (AC: #5)
-  - [ ] Add NotificationBadge + NotificationList to `components/layout/Navbar.tsx`
-  - [ ] Bell icon with badge count, click to open notification dropdown
+  - [x] Add indexes: `.index("by_userId", ["userId"])`, `.index("by_userId_isRead", ["userId", "isRead"])`
+- [x] Create notification helper function (AC: #1, #3, #4)
+  - [x] In `convex/notifications.ts`, create `createForRole` internal mutation
+  - [x] Accepts: `role` (or array of roles), `type`, `message`, `taskId`
+  - [x] Queries `users` table for all users with matching role(s)
+  - [x] Creates a notification record for each matching user
+- [x] Integrate notifications into task mutations (AC: #1, #3, #4)
+  - [x] In `convex/tasks.ts` `create` mutation: after saving task, call `createForRole` for staff users with type `"task_dispatched"`
+  - [x] In `convex/tasks.ts` `claim` mutation: call `createForRole` for admin + manager users with type `"task_claimed"`
+  - [x] In `convex/tasks.ts` `complete` mutation: call `createForRole` for admin + manager users with type `"task_completed"`
+- [x] Create notification queries (AC: #5, #6)
+  - [x] In `convex/notifications.ts`, add `listForUser` query — returns current user's notifications ordered by `createdAt` desc
+  - [x] Add `countUnread` query — returns count of `isRead: false` for current user
+  - [x] Both use `by_userId` index
+- [x] Create notification mutations (AC: #7)
+  - [x] In `convex/notifications.ts`, add `markAsRead` mutation — sets `isRead: true` for a single notification
+  - [x] Add `markAllAsRead` mutation — sets `isRead: true` for all of current user's unread notifications
+- [x] Build NotificationBadge component (AC: #5)
+  - [x] Create `components/notifications/NotificationBadge.tsx`
+  - [x] Use `useQuery(api.notifications.countUnread)` for reactive count
+  - [x] Display badge with count on bell icon in Navbar
+  - [x] Badge hidden when count is 0
+- [x] Build NotificationList component (AC: #6, #7)
+  - [x] Create `components/notifications/NotificationList.tsx`
+  - [x] Use `useQuery(api.notifications.listForUser)` for reactive list
+  - [x] Show as dropdown/popover from the bell icon in Navbar
+  - [x] Each notification shows: type icon, message, timestamp, read/unread state
+  - [x] Click to mark individual as read
+  - [x] "Mark all as read" button at top
+- [x] Integrate into Navbar (AC: #5)
+  - [x] Add NotificationBadge + NotificationList to `components/layout/Navbar.tsx`
+  - [x] Bell icon with badge count, click to open notification dropdown
 
 ## Dev Notes
 
@@ -89,6 +89,25 @@ components/
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6
+
 ### Debug Log References
+N/A
+
 ### Completion Notes List
+- Added `notifications` table to `convex/schema.ts` with `by_userId` and `by_userId_isRead` indexes
+- Created `convex/notifications.ts` with: `createForRole` (internalMutation), `listForUser` (query), `countUnread` (query), `markAsRead` (mutation), `markAllAsRead` (mutation)
+- Updated `convex/tasks.ts` — `create`, `claim`, and `complete` mutations now schedule `createForRole` via `ctx.scheduler.runAfter(0, ...)` to create role-based notifications
+- Created `components/notifications/NotificationBadge.tsx` — Bell icon with red unread count badge, toggles popover
+- Created `components/notifications/NotificationList.tsx` — Notification list with type-specific icons (ClipboardList/UserCheck/CheckCircle), relative timestamps, mark-as-read on click, "Mark all as read" button
+- Installed shadcn popover component (`components/ui/popover.tsx`)
+- Integrated `NotificationBadge` into `components/layout/Navbar.tsx` before `UserButton`
+
 ### File List
+- convex/schema.ts (modified)
+- convex/notifications.ts (new)
+- convex/tasks.ts (modified)
+- components/notifications/NotificationBadge.tsx (new)
+- components/notifications/NotificationList.tsx (new)
+- components/ui/popover.tsx (new, via shadcn)
+- components/layout/Navbar.tsx (modified)
