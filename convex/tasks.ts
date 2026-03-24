@@ -53,7 +53,7 @@ export const create = mutation({
       args.startTime && args.endTime
         ? `\n\u23F0 ${fmt(args.startTime)} \u2192 ${fmt(args.endTime)}`
         : "";
-    const telegramMsg = `\u{1F4CB} ${user.name} sent a ${args.subject}${coinPart}${platformPart}\n${args.body}${timePart}`;
+    const telegramMsg = `\u{1F4CB} JARVIS sent a ${args.subject}${coinPart}${platformPart}\n${args.body}${timePart}`;
     await ctx.scheduler.runAfter(0, internal.telegram.sendMessage, {
       message: telegramMsg,
     });
@@ -162,7 +162,7 @@ export const claim = mutation({
       task.startTime && task.endTime
         ? `\n\u23F0 ${claimFmt(task.startTime)} \u2192 ${claimFmt(task.endTime)}`
         : "";
-    const telegramMsg = `\u2705 ${user.name} acknowledged ${task.subject}${claimCoinPart}${claimPlatformPart}\n${task.body}${claimTimePart}`;
+    const telegramMsg = `\u2705 JARVIS acknowledged ${task.subject}${claimCoinPart}${claimPlatformPart}\n${task.body}${claimTimePart}`;
     await ctx.scheduler.runAfter(0, internal.telegram.sendMessage, {
       message: telegramMsg,
     });
@@ -171,7 +171,7 @@ export const claim = mutation({
     await ctx.scheduler.runAfter(0, internal.notifications.createForRole, {
       roles: ["admin", "manager"],
       type: "task_claimed",
-      message: `${user.name} claimed ${task.subject}`,
+      message: `JARVIS claimed ${task.subject}`,
       taskId: args.taskId,
     });
 
@@ -225,7 +225,7 @@ export const complete = mutation({
       task.startTime && task.endTime
         ? `\n\u23F0 ${doneFmt(task.startTime)} \u2192 ${doneFmt(task.endTime)}`
         : "";
-    const telegramMsg = `\u{1F389} ${user.name} completed ${task.subject}${doneCoinPart}${donePlatformPart}\n${task.body}${doneTimePart}`;
+    const telegramMsg = `\u{1F389} JARVIS completed ${task.subject}${doneCoinPart}${donePlatformPart}\n${task.body}${doneTimePart}`;
     await ctx.scheduler.runAfter(0, internal.telegram.sendMessage, {
       message: telegramMsg,
     });
@@ -234,7 +234,7 @@ export const complete = mutation({
     await ctx.scheduler.runAfter(0, internal.notifications.createForRole, {
       roles: ["admin", "manager"],
       type: "task_completed",
-      message: `${user.name} completed ${task.subject}`,
+      message: `JARVIS completed ${task.subject}`,
       taskId: args.taskId,
     });
 
