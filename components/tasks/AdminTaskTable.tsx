@@ -14,9 +14,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, Clock, Inbox } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, ChevronLeft, ChevronRight, Clock, Inbox } from "lucide-react";
 
 type StatusFilter = "all" | "pending" | "claimed" | "done";
+const PAGE_SIZE = 10;
 
 function formatShortDate(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString("en-US", {
@@ -30,6 +32,7 @@ function formatShortDate(timestamp: number): string {
 export function AdminTaskTable() {
   const tasks = useQuery(api.tasks.listAll);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [page, setPage] = useState(0);
 
   if (tasks === undefined) {
     return (
@@ -44,11 +47,17 @@ export function AdminTaskTable() {
       ? tasks
       : tasks.filter((task) => task.status === statusFilter);
 
-  // Sort: pending first, then claimed, then done at the bottom
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    const order = { pending: 0, claimed: 1, done: 2 };
-    return order[a.status] - order[b.status];
-  });
+  // Sort by created date DESC (newest first)
+  const sortedTasks = [...filteredTasks].sort(
+    (a, b) => b.createdAt - a.createdAt
+  );
+
+  // Pagination
+  const totalPages = Math.ceil(sortedTasks.length / PAGE_SIZE);
+  const paginatedTasks = sortedTasks.slice(
+    page * PAGE_SIZE,
+    (page + 1) * PAGE_SIZE
+  );
 
   const counts = {
     all: tasks.length,
@@ -101,7 +110,10 @@ export function AdminTaskTable() {
     <div className="space-y-4">
       <Tabs
         value={statusFilter}
-        onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+        onValueChange={(v) => {
+          setStatusFilter(v as StatusFilter);
+          setPage(0);
+        }}
       >
         <TabsList>
           <TabsTrigger value="all">All ({counts.all})</TabsTrigger>
@@ -112,7 +124,7 @@ export function AdminTaskTable() {
       </Tabs>
 
       <Card>
-        {sortedTasks.length === 0 ? (
+        {paginatedTasks.length === 0 ? (
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <div className="mb-3 rounded-full bg-muted p-3">
               <Inbox className="h-6 w-6 text-muted-foreground" />
@@ -133,13 +145,11 @@ export function AdminTaskTable() {
                   <TableHead>Subject</TableHead>
                   <TableHead>Message</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Sender</TableHead>
-                  <TableHead>Claimed By</TableHead>
                   <TableHead>Created</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedTasks.map((task) => (
+                {paginatedTasks.map((task) => (
                   <TableRow key={task._id} className={getRowStyle(task.status)}>
                     <TableCell>{getStatusBadge(task.status)}</TableCell>
                     <TableCell className="font-semibold">
@@ -158,12 +168,6 @@ export function AdminTaskTable() {
                         {task.type === "stressTest" ? "Stress Test" : "Simple"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-nowrap">
-                      {task.senderName}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-nowrap">
-                      {task.claimerName ?? "\u2014"}
-                    </TableCell>
                     <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
                       {formatShortDate(task.createdAt)}
                     </TableCell>
@@ -171,6 +175,33 @@ export function AdminTaskTable() {
                 ))}
               </TableBody>
             </Table>
+          </div>
+        )}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t px-4 py-3">
+            <p className="text-sm text-muted-foreground">
+              Page {page + 1} of {totalPages} ({sortedTasks.length} tasks)
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => p - 1)}
+                disabled={page === 0}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Prev
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= totalPages - 1}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
       </Card>
