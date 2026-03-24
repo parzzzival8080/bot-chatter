@@ -43,6 +43,7 @@ export const create = mutation({
     const platformPart = args.platform ? ` on ${args.platform}` : "";
     const fmt = (ts: number) =>
       new Date(ts).toLocaleString("en-US", {
+        timeZone: "Asia/Manila",
         month: "short",
         day: "numeric",
         hour: "numeric",
@@ -152,6 +153,7 @@ export const claim = mutation({
     const claimPlatformPart = task.platform ? ` on ${task.platform}` : "";
     const claimFmt = (ts: number) =>
       new Date(ts).toLocaleString("en-US", {
+        timeZone: "Asia/Manila",
         month: "short",
         day: "numeric",
         hour: "numeric",
@@ -215,6 +217,7 @@ export const complete = mutation({
     const donePlatformPart = task.platform ? ` on ${task.platform}` : "";
     const doneFmt = (ts: number) =>
       new Date(ts).toLocaleString("en-US", {
+        timeZone: "Asia/Manila",
         month: "short",
         day: "numeric",
         hour: "numeric",
