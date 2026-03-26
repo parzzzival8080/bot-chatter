@@ -4,15 +4,17 @@ import { useState } from "react";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Plus, Pencil, Trash2, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 
 type ConfigId = Id<"subjects"> | Id<"coins"> | Id<"platforms">;
 
@@ -42,68 +44,47 @@ export function ConfigItemManager({
   onRemove,
   onRestore,
 }: ConfigItemManagerProps) {
-  const [newName, setNewName] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState("");
-  const [isAdding, setIsAdding] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<ConfigId | null>(null);
+  const [name, setName] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 5;
 
-  const handleAdd = async () => {
-    const trimmed = newName.trim();
-    if (!trimmed) return;
-    setIsAdding(true);
-    try {
-      await onCreate({ name: trimmed });
-      setNewName("");
-      toast.success(`${title.slice(0, -1)} added successfully`);
-    } catch {
-      toast.error(`Failed to add ${title.slice(0, -1).toLowerCase()}`);
-    } finally {
-      setIsAdding(false);
-    }
-  };
+  const singular = title.slice(0, -1);
 
-  const handleUpdate = async (id: ConfigId) => {
-    const trimmed = editingName.trim();
-    if (!trimmed) return;
-    try {
-      await onUpdate({ id, name: trimmed });
-      setEditingId(null);
-      setEditingName("");
-      toast.success(`${title.slice(0, -1)} updated successfully`);
-    } catch {
-      toast.error(`Failed to update ${title.slice(0, -1).toLowerCase()}`);
-    }
-  };
-
-  const handleRemove = async (id: ConfigId) => {
-    try {
-      await onRemove({ id });
-      toast.success(`${title.slice(0, -1)} removed successfully`);
-    } catch {
-      toast.error(`Failed to remove ${title.slice(0, -1).toLowerCase()}`);
-    }
-  };
-
-  const handleRestore = async (id: ConfigId) => {
-    try {
-      await onRestore({ id });
-      toast.success(`${title.slice(0, -1)} restored successfully`);
-    } catch {
-      toast.error(`Failed to restore ${title.slice(0, -1).toLowerCase()}`);
-    }
-  };
-
-  const startEdit = (item: ConfigItem) => {
-    setEditingId(item._id);
-    setEditingName(item.name);
-  };
-
-  const cancelEdit = () => {
+  const openAdd = () => {
     setEditingId(null);
-    setEditingName("");
+    setName("");
+    setOpen(true);
   };
 
-  // Sort: active items first, then inactive
+  const openEdit = (item: ConfigItem) => {
+    setEditingId(item._id);
+    setName(item.name);
+    setOpen(true);
+  };
+
+  const handleSave = async () => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setIsSaving(true);
+    try {
+      if (editingId) {
+        await onUpdate({ id: editingId, name: trimmed });
+        toast.success(`${singular} updated`);
+      } else {
+        await onCreate({ name: trimmed });
+        toast.success(`${singular} added`);
+      }
+      setOpen(false);
+    } catch {
+      toast.error(`Failed to save ${singular.toLowerCase()}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const sortedItems = items
     ? [...items].sort((a, b) => {
         if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
@@ -112,118 +93,130 @@ export function ConfigItemManager({
     : undefined;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Add form */}
-        <div className="flex gap-2">
-          <Input
-            placeholder={`New ${title.slice(0, -1).toLowerCase()} name`}
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleAdd();
-            }}
-          />
-          <Button onClick={handleAdd} disabled={isAdding || !newName.trim()}>
+    <>
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-semibold">{title}</h3>
+            {description && (
+              <p className="text-xs text-muted-foreground">{description}</p>
+            )}
+          </div>
+          <Button size="sm" variant="outline" onClick={openAdd}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
             Add
           </Button>
         </div>
 
-        {/* Items list */}
         {sortedItems === undefined ? (
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <div className="flex items-center justify-center py-6">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          </div>
         ) : sortedItems.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No {title.toLowerCase()} yet. Add one above.
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            No {title.toLowerCase()} yet.
           </p>
         ) : (
-          <div className="space-y-2">
-            {sortedItems.map((item) => (
+          <>
+          <div className="space-y-1">
+            {sortedItems.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((item) => (
               <div
                 key={item._id}
-                className={`flex items-center justify-between rounded-lg border px-3 py-2 ${
-                  !item.isActive ? "opacity-50" : ""
+                className={`group flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-muted/50 ${
+                  !item.isActive ? "opacity-40" : ""
                 }`}
               >
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  {editingId === item._id ? (
-                    <div className="flex items-center gap-2 flex-1">
-                      <Input
-                        value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter")
-                            handleUpdate(item._id);
-                          if (e.key === "Escape") cancelEdit();
-                        }}
-                        className="h-7"
-                        autoFocus
-                      />
-                      <Button
-                        size="sm"
-                        onClick={() => handleUpdate(item._id)}
-                        disabled={!editingName.trim()}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={cancelEdit}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : (
+                <div className="flex items-center gap-2.5">
+                  <div className={`h-2 w-2 rounded-full ${item.isActive ? "bg-emerald-500" : "bg-muted-foreground/30"}`} />
+                  <span className={`text-sm font-medium ${!item.isActive ? "line-through text-muted-foreground" : ""}`}>
+                    {item.name}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {item.isActive ? (
                     <>
-                      <span className={`text-sm ${!item.isActive ? "text-muted-foreground line-through" : ""}`}>
-                        {item.name}
-                      </span>
-                      <Badge variant={item.isActive ? "secondary" : "outline"}>
-                        {item.isActive ? "Active" : "Inactive"}
-                      </Badge>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        onClick={() => openEdit(item)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={() =>
+                          onRemove({ id: item._id }).then(() =>
+                            toast.success(`${singular} removed`)
+                          )
+                        }
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </>
+                  ) : (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7"
+                      onClick={() =>
+                        onRestore({ id: item._id }).then(() =>
+                          toast.success(`${singular} restored`)
+                        )
+                      }
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                    </Button>
                   )}
                 </div>
-                {editingId !== item._id && (
-                  <div className="flex items-center gap-1 ml-2">
-                    {item.isActive ? (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => startEdit(item)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleRemove(item._id)}
-                        >
-                          Remove
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleRestore(item._id)}
-                      >
-                        Restore
-                      </Button>
-                    )}
-                  </div>
-                )}
               </div>
             ))}
           </div>
+          {sortedItems.length > PAGE_SIZE && (
+            <div className="flex items-center justify-between pt-2">
+              <p className="text-xs text-muted-foreground">
+                {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, sortedItems.length)} of {sortedItems.length}
+              </p>
+              <div className="flex items-center gap-1">
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPage(p => p - 1)} disabled={page === 0}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setPage(p => p + 1)} disabled={(page + 1) * PAGE_SIZE >= sortedItems.length}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+          </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingId ? `Edit ${singular}` : `Add ${singular}`}</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <Label>Name</Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={`${singular} name`}
+              className="mt-2"
+              onKeyDown={(e) => e.key === "Enter" && handleSave()}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={handleSave} disabled={!name.trim() || isSaving}>
+              {editingId ? "Update" : "Add"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

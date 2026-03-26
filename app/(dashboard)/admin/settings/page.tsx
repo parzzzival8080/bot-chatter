@@ -4,6 +4,9 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { ConfigItemManager } from "@/components/admin/ConfigItemManager";
 import { TelegramSettings } from "@/components/admin/TelegramSettings";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+import { Tag, Coins, Monitor, Bot } from "lucide-react";
 
 export default function AdminSettingsPage() {
   const currentUser = useQuery(api.users.getCurrentUser);
@@ -37,9 +40,7 @@ export default function AdminSettingsPage() {
   if (!currentUser || currentUser.role !== "admin") {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-destructive">
-          Access denied. Admin role required.
-        </p>
+        <p className="text-destructive">Access denied. Admin role required.</p>
       </div>
     );
   }
@@ -49,67 +50,76 @@ export default function AdminSettingsPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">
-          Manage subjects, coins, platforms, and integrations.
+          Manage dispatch options and integrations.
         </p>
       </div>
 
-      <div className="grid gap-6">
-        <ConfigItemManager
-          title="Subjects"
-          description="Manage subject options for task dispatch."
-          items={subjects}
-          onCreate={async ({ name }) => {
-            await createSubject({ name });
-          }}
-          onUpdate={async ({ id, name }) => {
-            await updateSubject({ id: id as any, name });
-          }}
-          onRemove={async ({ id }) => {
-            await removeSubject({ id: id as any });
-          }}
-          onRestore={async ({ id }) => {
-            await restoreSubject({ id: id as any });
-          }}
-        />
+      <Tabs defaultValue="subjects">
+        <TabsList>
+          <TabsTrigger value="subjects" className="gap-1.5">
+            <Tag className="h-3.5 w-3.5" />
+            Subjects
+          </TabsTrigger>
+          <TabsTrigger value="coins" className="gap-1.5">
+            <Coins className="h-3.5 w-3.5" />
+            Coins
+          </TabsTrigger>
+          <TabsTrigger value="platforms" className="gap-1.5">
+            <Monitor className="h-3.5 w-3.5" />
+            Platforms
+          </TabsTrigger>
+          <TabsTrigger value="telegram" className="gap-1.5">
+            <Bot className="h-3.5 w-3.5" />
+            Telegram
+          </TabsTrigger>
+        </TabsList>
 
-        <ConfigItemManager
-          title="Coins"
-          description="Manage coin options for task dispatch."
-          items={coins}
-          onCreate={async ({ name }) => {
-            await createCoin({ name });
-          }}
-          onUpdate={async ({ id, name }) => {
-            await updateCoin({ id: id as any, name });
-          }}
-          onRemove={async ({ id }) => {
-            await removeCoin({ id: id as any });
-          }}
-          onRestore={async ({ id }) => {
-            await restoreCoin({ id: id as any });
-          }}
-        />
+        <TabsContent value="subjects" className="mt-4">
+          <Card className="p-5">
+            <ConfigItemManager
+              title="Subjects"
+              description="Task subject options for dispatch."
+              items={subjects}
+              onCreate={async ({ name }) => { await createSubject({ name }); }}
+              onUpdate={async ({ id, name }) => { await updateSubject({ id: id as any, name }); }}
+              onRemove={async ({ id }) => { await removeSubject({ id: id as any }); }}
+              onRestore={async ({ id }) => { await restoreSubject({ id: id as any }); }}
+            />
+          </Card>
+        </TabsContent>
 
-        <ConfigItemManager
-          title="Platforms"
-          description="Manage platform options for task dispatch (e.g. Binance, Bybit)."
-          items={platforms}
-          onCreate={async ({ name }) => {
-            await createPlatform({ name });
-          }}
-          onUpdate={async ({ id, name }) => {
-            await updatePlatform({ id: id as any, name });
-          }}
-          onRemove={async ({ id }) => {
-            await removePlatform({ id: id as any });
-          }}
-          onRestore={async ({ id }) => {
-            await restorePlatform({ id: id as any });
-          }}
-        />
+        <TabsContent value="coins" className="mt-4">
+          <Card className="p-5">
+            <ConfigItemManager
+              title="Coins"
+              description="Coin options for task dispatch."
+              items={coins}
+              onCreate={async ({ name }) => { await createCoin({ name }); }}
+              onUpdate={async ({ id, name }) => { await updateCoin({ id: id as any, name }); }}
+              onRemove={async ({ id }) => { await removeCoin({ id: id as any }); }}
+              onRestore={async ({ id }) => { await restoreCoin({ id: id as any }); }}
+            />
+          </Card>
+        </TabsContent>
 
-        <TelegramSettings />
-      </div>
+        <TabsContent value="platforms" className="mt-4">
+          <Card className="p-5">
+            <ConfigItemManager
+              title="Platforms"
+              description="Platform options for dispatch (e.g. Binance, Bybit)."
+              items={platforms}
+              onCreate={async ({ name }) => { await createPlatform({ name }); }}
+              onUpdate={async ({ id, name }) => { await updatePlatform({ id: id as any, name }); }}
+              onRemove={async ({ id }) => { await removePlatform({ id: id as any }); }}
+              onRestore={async ({ id }) => { await restorePlatform({ id: id as any }); }}
+            />
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="telegram" className="mt-4">
+          <TelegramSettings />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

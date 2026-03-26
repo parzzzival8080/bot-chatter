@@ -75,6 +75,59 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_createdAt", ["createdAt"]),
 
+  teamMembers: defineTable({
+    name: v.string(),
+    shift: v.string(),
+    teamRole: v.union(
+      v.literal("leader"),
+      v.literal("customer_rep"),
+      v.literal("customer_rep_asst")
+    ),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_teamRole", ["teamRole"]),
+
+  customers: defineTable({
+    uid: v.string(),
+    team: v.string(),
+    customerRepId: v.id("teamMembers"),
+    customerRepAsstId: v.optional(v.id("teamMembers")),
+    createdAt: v.number(),
+  })
+    .index("by_uid", ["uid"])
+    .index("by_customerRepId", ["customerRepId"]),
+
+  customerTransactions: defineTable({
+    customerId: v.id("customers"),
+    txId: v.string(),
+    type: v.union(v.literal("deposit"), v.literal("withdraw")),
+    isFirstDeposit: v.optional(v.boolean()),
+    coin: v.string(),
+    initialAmount: v.number(),
+    conversion: v.optional(v.number()),
+    finalAmount: v.number(),
+    dateOfTransaction: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_customerId", ["customerId"])
+    .index("by_txId", ["txId"])
+    .index("by_dateOfTransaction", ["dateOfTransaction"]),
+
+  commissionRules: defineTable({
+    description: v.string(),
+    teamRole: v.union(
+      v.literal("leader"),
+      v.literal("customer_rep"),
+      v.literal("customer_rep_asst")
+    ),
+    percentage: v.number(),
+    minFirstDepositCount: v.optional(v.number()),
+    minAmount: v.number(),
+    maxAmount: v.number(),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_teamRole", ["teamRole"]),
+
   settings: defineTable({
     key: v.string(),
     value: v.string(),

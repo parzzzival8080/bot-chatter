@@ -11,6 +11,9 @@
 import type * as chat from "../chat.js";
 import type * as clerkAdmin from "../clerkAdmin.js";
 import type * as coins from "../coins.js";
+import type * as commissionRules from "../commissionRules.js";
+import type * as customerTransactions from "../customerTransactions.js";
+import type * as customers from "../customers.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as notifications from "../notifications.js";
 import type * as platforms from "../platforms.js";
@@ -19,6 +22,7 @@ import type * as seed from "../seed.js";
 import type * as settings from "../settings.js";
 import type * as subjects from "../subjects.js";
 import type * as tasks from "../tasks.js";
+import type * as teamMembers from "../teamMembers.js";
 import type * as telegram from "../telegram.js";
 import type * as users from "../users.js";
 
@@ -32,6 +36,9 @@ declare const fullApi: ApiFromModules<{
   chat: typeof chat;
   clerkAdmin: typeof clerkAdmin;
   coins: typeof coins;
+  commissionRules: typeof commissionRules;
+  customerTransactions: typeof customerTransactions;
+  customers: typeof customers;
   "lib/auth": typeof lib_auth;
   notifications: typeof notifications;
   platforms: typeof platforms;
@@ -40,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   settings: typeof settings;
   subjects: typeof subjects;
   tasks: typeof tasks;
+  teamMembers: typeof teamMembers;
   telegram: typeof telegram;
   users: typeof users;
 }>;
