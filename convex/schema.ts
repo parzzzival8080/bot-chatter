@@ -70,6 +70,8 @@ export default defineSchema({
     senderName: v.string(),
     senderRole: v.string(),
     message: v.string(),
+    imageId: v.optional(v.id("_storage")),
+    replyToId: v.optional(v.id("chatMessages")),
     createdAt: v.number(),
   }).index("by_createdAt", ["createdAt"]),
 
