@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -12,6 +12,35 @@ import { SendHorizontal, ImagePlus, X, Search, Reply } from "lucide-react";
 function autoResize(el: HTMLTextAreaElement) {
   el.style.height = "auto";
   el.style.height = `${Math.min(el.scrollHeight, 150)}px`;
+}
+
+/** Render message text with @mentions highlighted */
+function MessageText({ text, isMe }: { text: string; isMe: boolean }) {
+  const parts = text.split(/(@\w[\w\s]*?\b)/g);
+  return (
+    <p className="text-sm whitespace-pre-wrap wrap-break-word">
+      {parts.map((part, i) =>
+        part.startsWith("@") ? (
+          <span
+            key={i}
+            className={`font-semibold ${
+              isMe ? "text-primary-foreground" : "text-primary"
+            }`}
+          >
+            {part}
+          </span>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </p>
+  );
+}
+
+interface MentionUser {
+  _id: Id<"users">;
+  name: string;
+  role: string;
 }
 
 function getRoleBadge(role: string) {
@@ -171,6 +200,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
 
 export function ChatRoom({ currentUserId }: { currentUserId: string }) {
   const messages = useQuery(api.chat.list);
+  const chatUsers = useQuery(api.chat.listUsers);
   const sendMessage = useMutation(api.chat.send);
   const generateUploadUrl = useMutation(api.chat.generateUploadUrl);
   const [input, setInput] = useState("");
@@ -179,10 +209,89 @@ export function ChatRoom({ currentUserId }: { currentUserId: string }) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const [replyTo, setReplyTo] = useState<ReplyInfo | null>(null);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionIndex, setMentionIndex] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const prevMessageCountRef = useRef<number>(0);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Desktop notification for new messages from others
+  useEffect(() => {
+    if (!messages) return;
+    const prevCount = prevMessageCountRef.current;
+    prevMessageCountRef.current = messages.length;
+
+    // Skip initial load
+    if (prevCount === 0) return;
+
+    // Check for new messages
+    if (messages.length > prevCount) {
+      const newMessages = messages.slice(prevCount);
+      for (const msg of newMessages) {
+        if (msg.senderId === currentUserId) continue;
+        if (
+          "Notification" in window &&
+          Notification.permission === "granted" &&
+          document.hidden
+        ) {
+          const body = msg.message || "(image)";
+          new Notification(`${msg.senderName}`, {
+            body,
+            icon: "/favicon.ico",
+            tag: msg._id,
+          });
+        }
+      }
+    }
+  }, [messages, currentUserId]);
+
+  const filteredMentions: MentionUser[] =
+    mentionQuery !== null && chatUsers
+      ? chatUsers.filter((u) =>
+          u.name.toLowerCase().includes(mentionQuery.toLowerCase())
+        )
+      : [];
+
+  const getMentionContext = useCallback(() => {
+    const el = inputRef.current;
+    if (!el) return null;
+    const cursor = el.selectionStart;
+    const textBefore = input.slice(0, cursor);
+    const match = textBefore.match(/@(\w*)$/);
+    if (!match) return null;
+    return { query: match[1], start: match.index! };
+  }, [input]);
+
+  const insertMention = useCallback(
+    (user: MentionUser) => {
+      const el = inputRef.current;
+      if (!el) return;
+      const ctx = getMentionContext();
+      if (!ctx) return;
+      const before = input.slice(0, ctx.start);
+      const after = input.slice(el.selectionStart);
+      const newInput = `${before}@${user.name} ${after}`;
+      setInput(newInput);
+      setMentionQuery(null);
+      setMentionIndex(0);
+      requestAnimationFrame(() => {
+        const pos = ctx.start + user.name.length + 2;
+        el.selectionStart = pos;
+        el.selectionEnd = pos;
+        el.focus();
+      });
+    },
+    [input, getMentionContext]
+  );
 
   useEffect(() => {
     if (!showSearch) {
@@ -393,9 +502,7 @@ export function ChatRoom({ currentUserId }: { currentUserId: string }) {
                           </a>
                         )}
                         {msg.message && (
-                          <p className="text-sm whitespace-pre-wrap wrap-break-word">
-                            {msg.message}
-                          </p>
+                          <MessageText text={msg.message} isMe={isMe} />
                         )}
                         <p
                           className={`mt-0.5 text-[10px] ${
@@ -461,7 +568,7 @@ export function ChatRoom({ currentUserId }: { currentUserId: string }) {
                 </div>
               </div>
             )}
-            <div className="flex items-end gap-2">
+            <div className="relative flex items-end gap-2">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -479,31 +586,95 @@ export function ChatRoom({ currentUserId }: { currentUserId: string }) {
               >
                 <ImagePlus className="h-4 w-4" />
               </Button>
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => {
-                  setInput(e.target.value);
-                  autoResize(e.target);
-                }}
-                onPaste={handlePaste}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
+              <div className="relative flex-1">
+                {/* Mention dropdown */}
+                {mentionQuery !== null && filteredMentions.length > 0 && (
+                  <div className="absolute bottom-full left-0 right-0 mb-1 max-h-40 overflow-y-auto rounded-lg border bg-popover shadow-md">
+                    {filteredMentions.map((user, i) => (
+                      <button
+                        key={user._id}
+                        type="button"
+                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent ${
+                          i === mentionIndex ? "bg-accent" : ""
+                        }`}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          insertMention(user);
+                        }}
+                      >
+                        <span className="font-medium">{user.name}</span>
+                        {getRoleBadge(user.role)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    autoResize(e.target);
+                    // Check for mention trigger after React updates
+                    requestAnimationFrame(() => {
+                      const el = inputRef.current;
+                      if (!el) return;
+                      const cursor = el.selectionStart;
+                      const textBefore = e.target.value.slice(0, cursor);
+                      const match = textBefore.match(/@(\w*)$/);
+                      if (match) {
+                        setMentionQuery(match[1]);
+                        setMentionIndex(0);
+                      } else {
+                        setMentionQuery(null);
+                      }
+                    });
+                  }}
+                  onPaste={handlePaste}
+                  onKeyDown={(e) => {
+                    // Handle mention navigation
+                    if (mentionQuery !== null && filteredMentions.length > 0) {
+                      if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        setMentionIndex((i) =>
+                          i < filteredMentions.length - 1 ? i + 1 : 0
+                        );
+                        return;
+                      }
+                      if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        setMentionIndex((i) =>
+                          i > 0 ? i - 1 : filteredMentions.length - 1
+                        );
+                        return;
+                      }
+                      if (e.key === "Enter" || e.key === "Tab") {
+                        e.preventDefault();
+                        insertMention(filteredMentions[mentionIndex]);
+                        return;
+                      }
+                      if (e.key === "Escape") {
+                        e.preventDefault();
+                        setMentionQuery(null);
+                        return;
+                      }
+                    }
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder={
+                    replyTo
+                      ? `Reply to ${replyTo.senderName}...`
+                      : selectedImage
+                        ? "Add a caption..."
+                        : "Type a message... (@ to mention)"
                   }
-                }}
-                placeholder={
-                  replyTo
-                    ? `Reply to ${replyTo.senderName}...`
-                    : selectedImage
-                      ? "Add a caption..."
-                      : "Type a message..."
-                }
-                rows={1}
-                className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                autoFocus
-              />
+                  rows={1}
+                  className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  autoFocus
+                />
+              </div>
               <Button
                 type="button"
                 size="icon"

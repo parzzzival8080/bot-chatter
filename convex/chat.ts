@@ -41,6 +41,18 @@ export const list = query({
   },
 });
 
+export const listUsers = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireRole(ctx, [...CHAT_ROLES]);
+
+    const users = await ctx.db.query("users").collect();
+    return users
+      .filter((u) => u.role && (CHAT_ROLES as readonly string[]).includes(u.role))
+      .map((u) => ({ _id: u._id, name: u.name, role: u.role! }));
+  },
+});
+
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
