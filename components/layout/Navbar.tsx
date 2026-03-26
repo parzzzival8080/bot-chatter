@@ -9,6 +9,7 @@ import { NotificationBadge } from "@/components/notifications/NotificationBadge"
 import { cn } from "@/lib/utils";
 import {
   MessageSquarePlus,
+  MessageCircle,
   LayoutDashboard,
   Users,
   Settings,
@@ -21,6 +22,10 @@ export function Navbar() {
   const isAdmin = currentUser?.role === "admin";
   const isAdminOrManager =
     currentUser?.role === "admin" || currentUser?.role === "manager";
+  const canChat =
+    currentUser?.role === "admin" ||
+    currentUser?.role === "manager" ||
+    currentUser?.role === "customer_service";
 
   const navLink = (href: string, label: string, icon: React.ReactNode) => (
     <Link
@@ -57,6 +62,8 @@ export function Navbar() {
               "Compose",
               <MessageSquarePlus className="h-4 w-4" />
             )}
+          {canChat &&
+            navLink("/chat", "Chat", <MessageCircle className="h-4 w-4" />)}
           {isAdmin &&
             navLink("/admin/users", "Users", <Users className="h-4 w-4" />)}
           {isAdmin &&

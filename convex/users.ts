@@ -137,7 +137,8 @@ export const updateRole = mutation({
     role: v.union(
       v.literal("admin"),
       v.literal("manager"),
-      v.literal("staff")
+      v.literal("staff"),
+      v.literal("customer_service")
     ),
   },
   handler: async (ctx, args) => {
