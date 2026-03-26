@@ -9,6 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { SendHorizontal, ImagePlus, X, Search, Reply } from "lucide-react";
 
+function autoResize(el: HTMLTextAreaElement) {
+  el.style.height = "auto";
+  el.style.height = `${Math.min(el.scrollHeight, 150)}px`;
+}
+
 function getRoleBadge(role: string) {
   switch (role) {
     case "admin":
@@ -177,7 +182,7 @@ export function ChatRoom({ currentUserId }: { currentUserId: string }) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!showSearch) {
@@ -211,6 +216,22 @@ export function ChatRoom({ currentUserId }: { currentUserId: string }) {
   };
 
   const clearReply = () => setReplyTo(null);
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith("image/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (!file) return;
+        setSelectedImage(file);
+        const url = URL.createObjectURL(file);
+        setImagePreview(url);
+        return;
+      }
+    }
+  };
 
   const handleSend = async () => {
     const trimmed = input.trim();
@@ -440,13 +461,7 @@ export function ChatRoom({ currentUserId }: { currentUserId: string }) {
                 </div>
               </div>
             )}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSend();
-              }}
-              className="flex gap-2"
-            >
+            <div className="flex items-end gap-2">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -458,15 +473,26 @@ export function ChatRoom({ currentUserId }: { currentUserId: string }) {
                 type="button"
                 size="icon"
                 variant="ghost"
+                className="shrink-0"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isSending}
               >
                 <ImagePlus className="h-4 w-4" />
               </Button>
-              <Input
+              <textarea
                 ref={inputRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  autoResize(e.target);
+                }}
+                onPaste={handlePaste}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
                 placeholder={
                   replyTo
                     ? `Reply to ${replyTo.senderName}...`
@@ -474,16 +500,20 @@ export function ChatRoom({ currentUserId }: { currentUserId: string }) {
                       ? "Add a caption..."
                       : "Type a message..."
                 }
+                rows={1}
+                className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 autoFocus
               />
               <Button
-                type="submit"
+                type="button"
                 size="icon"
+                className="shrink-0"
+                onClick={handleSend}
                 disabled={(!input.trim() && !selectedImage) || isSending}
               >
                 <SendHorizontal className="h-4 w-4" />
               </Button>
-            </form>
+            </div>
           </div>
         </>
       )}
