@@ -7,7 +7,7 @@ export default defineSchema({
     name: v.string(),
     email: v.string(),
     role: v.optional(
-      v.union(v.literal("admin"), v.literal("manager"), v.literal("staff"))
+      v.union(v.literal("admin"), v.literal("manager"), v.literal("staff"), v.literal("customer_service"))
     ),
     createdAt: v.number(),
   }).index("by_clerkId", ["clerkId"]),

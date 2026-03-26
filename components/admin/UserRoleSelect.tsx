@@ -16,6 +16,7 @@ const ROLES = [
   { value: "admin", label: "Admin" },
   { value: "manager", label: "Manager" },
   { value: "staff", label: "Staff" },
+  { value: "customer_service", label: "Customer Service" },
 ] as const;
 
 interface UserRoleSelectProps {
@@ -32,7 +33,7 @@ export function UserRoleSelect({ userId, currentRole }: UserRoleSelectProps) {
     try {
       await updateRole({
         userId,
-        role: value as "admin" | "manager" | "staff",
+        role: value as "admin" | "manager" | "staff" | "customer_service",
       });
       toast.success("Role updated successfully");
     } catch (error) {
@@ -43,7 +44,7 @@ export function UserRoleSelect({ userId, currentRole }: UserRoleSelectProps) {
 
   return (
     <Select value={currentRole ?? ""} onValueChange={handleRoleChange}>
-      <SelectTrigger className="w-[140px]">
+      <SelectTrigger className="w-35">
         <SelectValue placeholder="Assign role" />
       </SelectTrigger>
       <SelectContent>

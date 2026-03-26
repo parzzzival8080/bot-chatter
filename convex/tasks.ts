@@ -92,7 +92,7 @@ export const create = mutation({
 
     // Story 5.1: Dispatch in-app notifications to staff
     await ctx.scheduler.runAfter(0, internal.notifications.createForRole, {
-      roles: ["staff"],
+      roles: ["staff", "customer_service"],
       type: "task_dispatched",
       message: `New task: ${args.subject} \u2014 ${args.body}`,
       taskId,
@@ -106,7 +106,7 @@ export const create = mutation({
 export const listPending = query({
   args: {},
   handler: async (ctx) => {
-    await requireRole(ctx, ["staff", "manager", "admin"]);
+    await requireRole(ctx, ["staff", "customer_service", "manager", "admin"]);
 
     const tasks = await ctx.db
       .query("tasks")
@@ -129,7 +129,7 @@ export const claim = mutation({
     taskId: v.id("tasks"),
   },
   handler: async (ctx, args) => {
-    const user = await requireRole(ctx, ["staff", "manager", "admin"]);
+    const user = await requireRole(ctx, ["staff", "customer_service", "manager", "admin"]);
 
     const task = await ctx.db.get(args.taskId);
     if (!task) {
@@ -187,7 +187,7 @@ export const complete = mutation({
     taskId: v.id("tasks"),
   },
   handler: async (ctx, args) => {
-    const user = await requireRole(ctx, ["staff", "manager", "admin"]);
+    const user = await requireRole(ctx, ["staff", "customer_service", "manager", "admin"]);
 
     const task = await ctx.db.get(args.taskId);
     if (!task) {
@@ -249,7 +249,7 @@ export const complete = mutation({
 export const listMyTasks = query({
   args: {},
   handler: async (ctx) => {
-    const user = await requireRole(ctx, ["staff", "manager", "admin"]);
+    const user = await requireRole(ctx, ["staff", "customer_service", "manager", "admin"]);
 
     const tasks = await ctx.db
       .query("tasks")

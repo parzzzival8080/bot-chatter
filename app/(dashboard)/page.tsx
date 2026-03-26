@@ -48,7 +48,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (role === "staff") {
+  if (role === "staff" || role === "customer_service") {
     return (
       <div className="space-y-6">
         <div>

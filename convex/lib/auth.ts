@@ -1,7 +1,7 @@
 import { QueryCtx, MutationCtx } from "../_generated/server";
 import { ConvexError } from "convex/values";
 
-type Role = "admin" | "manager" | "staff";
+type Role = "admin" | "manager" | "staff" | "customer_service";
 
 /**
  * Requires the current user to have one of the specified roles.

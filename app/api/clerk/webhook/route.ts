@@ -72,7 +72,8 @@ export async function POST(req: Request) {
     const role =
       metadataRole === "admin" ||
       metadataRole === "manager" ||
-      metadataRole === "staff"
+      metadataRole === "staff" ||
+      metadataRole === "customer_service"
         ? metadataRole
         : undefined;
 
