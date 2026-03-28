@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -67,6 +67,9 @@ export function LiveChatInbox({ currentUser }: Props) {
   const [selectedChatId, setSelectedChatId] = useState<Id<"liveChats"> | null>(null);
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferTo, setTransferTo] = useState<string | null>(null);
   const [auditOpen, setAuditOpen] = useState(false);
@@ -83,6 +86,33 @@ export function LiveChatInbox({ currentUser }: Props) {
       ? { chatId: selectedChatId }
       : "skip"
   );
+
+  const generateUploadUrl = useMutation(api.liveChat.generateSupervisorUploadUrl);
+
+  const handleImageFile = useCallback((file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => setImagePreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+  }, []);
+
+  // Paste handler — only when a chat is selected and claimed
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      if (!selectedChatId) return;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) handleImageFile(file);
+        }
+      }
+    }
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [selectedChatId, handleImageFile]);
 
   const claimChat = useMutation(api.liveChat.claimChat);
   const unclaimChat = useMutation(api.liveChat.unclaimChat);
@@ -122,11 +152,24 @@ export function LiveChatInbox({ currentUser }: Props) {
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!replyText.trim() || !selectedChatId) return;
+    if ((!replyText.trim() && !imageFile) || !selectedChatId) return;
     setSending(true);
     try {
-      await sendMessage({ chatId: selectedChatId, text: replyText.trim() });
+      let imageId: Id<"_storage"> | undefined;
+      if (imageFile) {
+        const uploadUrl = await generateUploadUrl();
+        const res = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": imageFile.type },
+          body: imageFile,
+        });
+        const { storageId } = await res.json();
+        imageId = storageId;
+      }
+      await sendMessage({ chatId: selectedChatId, text: replyText.trim(), imageId });
       setReplyText("");
+      setImageFile(null);
+      setImagePreview(null);
     } finally {
       setSending(false);
     }
@@ -336,7 +379,14 @@ export function LiveChatInbox({ currentUser }: Props) {
                   {msg.sender === "supervisor" && (
                     <p className="mb-0.5 text-[10px] opacity-70">{msg.senderName}</p>
                   )}
-                  {msg.text}
+                  {(msg as any).imageUrl && (
+                    <img
+                      src={(msg as any).imageUrl}
+                      alt="attachment"
+                      className="mb-1.5 max-h-48 w-auto rounded-lg object-contain"
+                    />
+                  )}
+                  {msg.text && <p>{msg.text}</p>}
                   <div className={cn("mt-0.5 text-right text-[10px] opacity-60")}>
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </div>
@@ -350,23 +400,55 @@ export function LiveChatInbox({ currentUser }: Props) {
 
           {/* Reply input */}
           {selectedChat.status !== "closed" ? (
-            <form onSubmit={handleSend} className="flex items-end gap-2 border-t px-4 py-3">
-              <input
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                placeholder={selectedChat.claimedBy === currentUser._id ? "Type a reply…" : "Claim this chat to reply"}
-                disabled={selectedChat.claimedBy !== currentUser._id}
-                className="flex-1 rounded-xl border px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
-                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(e); } }}
-              />
-              <Button
-                type="submit"
-                size="icon"
-                disabled={!replyText.trim() || sending || selectedChat.claimedBy !== currentUser._id}
-                className="h-9 w-9 shrink-0"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+            <form onSubmit={handleSend} className="border-t px-4 py-3 space-y-2">
+              {/* Image preview */}
+              {imagePreview && (
+                <div className="relative inline-block">
+                  <img src={imagePreview} alt="preview" className="max-h-24 rounded-lg border object-contain" />
+                  <button
+                    type="button"
+                    onClick={() => { setImageFile(null); setImagePreview(null); }}
+                    className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-gray-800 text-white text-xs hover:bg-red-500"
+                  >×</button>
+                </div>
+              )}
+              <div className="flex items-end gap-2">
+                {/* File upload */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={selectedChat.claimedBy !== currentUser._id}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-muted-foreground transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
+                  title="Attach image"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageFile(f); e.target.value = ""; }}
+                />
+                <input
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder={selectedChat.claimedBy === currentUser._id ? "Type a reply or paste an image…" : "Claim this chat to reply"}
+                  disabled={selectedChat.claimedBy !== currentUser._id}
+                  className="flex-1 rounded-xl border px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(e); } }}
+                />
+                <Button
+                  type="submit"
+                  size="icon"
+                  disabled={(!replyText.trim() && !imageFile) || sending || selectedChat.claimedBy !== currentUser._id}
+                  className="h-9 w-9 shrink-0"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
             </form>
           ) : (
             <div className="border-t px-4 py-3 text-center text-xs text-muted-foreground">

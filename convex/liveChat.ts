@@ -29,10 +29,18 @@ export const startSession = mutation({
   },
 });
 
+export const generateClientUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
 export const sendClientMessage = mutation({
   args: {
     chatId: v.id("liveChats"),
     text: v.string(),
+    imageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     const chat = await ctx.db.get(args.chatId);
@@ -43,6 +51,7 @@ export const sendClientMessage = mutation({
       chatId: args.chatId,
       sender: "client",
       text: args.text,
+      imageId: args.imageId,
       createdAt: Date.now(),
     });
   },
@@ -51,11 +60,17 @@ export const sendClientMessage = mutation({
 export const getClientMessages = query({
   args: { chatId: v.id("liveChats") },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const msgs = await ctx.db
       .query("liveMessages")
       .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
       .order("asc")
       .collect();
+    return await Promise.all(
+      msgs.map(async (msg) => ({
+        ...msg,
+        imageUrl: msg.imageId ? await ctx.storage.getUrl(msg.imageId) : null,
+      }))
+    );
   },
 });
 
@@ -105,15 +120,29 @@ export const getMyActiveChats = query({
   },
 });
 
+export const generateSupervisorUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    await requireRole(ctx, ["admin", "customer_service"]);
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
 export const getChatMessages = query({
   args: { chatId: v.id("liveChats") },
   handler: async (ctx, args) => {
     await requireRole(ctx, ["admin", "customer_service"]);
-    return await ctx.db
+    const msgs = await ctx.db
       .query("liveMessages")
       .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
       .order("asc")
       .collect();
+    return await Promise.all(
+      msgs.map(async (msg) => ({
+        ...msg,
+        imageUrl: msg.imageId ? await ctx.storage.getUrl(msg.imageId) : null,
+      }))
+    );
   },
 });
 
@@ -195,7 +224,11 @@ export const transferChat = mutation({
 });
 
 export const sendSupervisorMessage = mutation({
-  args: { chatId: v.id("liveChats"), text: v.string() },
+  args: {
+    chatId: v.id("liveChats"),
+    text: v.string(),
+    imageId: v.optional(v.id("_storage")),
+  },
   handler: async (ctx, args) => {
     const user = await requireRole(ctx, ["admin", "customer_service"]);
     const chat = await ctx.db.get(args.chatId);
@@ -207,6 +240,7 @@ export const sendSupervisorMessage = mutation({
       senderId: user._id,
       senderName: user.name,
       text: args.text,
+      imageId: args.imageId,
       createdAt: Date.now(),
     });
   },

@@ -155,6 +155,7 @@ export default defineSchema({
     senderId: v.optional(v.id("users")),
     senderName: v.optional(v.string()),
     text: v.string(),
+    imageId: v.optional(v.id("_storage")),
     createdAt: v.number(),
   }).index("by_chatId", ["chatId"]),
 
