@@ -141,7 +141,7 @@ export default function LiveChatWidget() {
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
                 placeholder="Your name"
-                className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-gray-200"
               />
             </div>
 
@@ -157,7 +157,7 @@ export default function LiveChatWidget() {
                 className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition focus:ring-2 ${
                   emailError
                     ? "border-red-400 focus:border-red-400 focus:ring-red-100"
-                    : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
+                    : "border-gray-200 focus:ring-2 focus:ring-gray-200"
                 }`}
               />
               {emailError && <p className="mt-1 text-xs text-red-500">{emailError}</p>}
@@ -172,7 +172,7 @@ export default function LiveChatWidget() {
                 value={uid}
                 onChange={(e) => setUid(e.target.value)}
                 placeholder="Your account UID"
-                className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-gray-200"
               />
             </div>
 
@@ -212,7 +212,7 @@ export default function LiveChatWidget() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         <div className="flex gap-2">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">S</div>
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: "var(--accent)", opacity: 0.8 }}>S</div>
           <div className="max-w-[75%] rounded-2xl rounded-tl-sm bg-gray-100 px-3 py-2 text-sm text-gray-800">
             Hi there! 👋 We have received your message and will connect you with an agent shortly.
           </div>
@@ -221,7 +221,7 @@ export default function LiveChatWidget() {
         {messages?.map((msg) => (
           <div key={msg._id} className={`flex gap-2 ${msg.sender === "client" ? "flex-row-reverse" : ""}`}>
             {msg.sender === "supervisor" && (
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: "var(--accent)", opacity: 0.8 }}>
                 {msg.senderName?.[0] ?? "S"}
               </div>
             )}
@@ -275,7 +275,7 @@ export default function LiveChatWidget() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-gray-400 transition hover:border-blue-400 hover:text-blue-500"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-gray-400 transition hover:border-gray-400 hover:text-gray-600"
               title="Attach image"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -293,7 +293,7 @@ export default function LiveChatWidget() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Type a message or paste an image…"
-              className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-gray-200"
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(e); } }}
             />
             <button
