@@ -77,7 +77,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("customers") },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ["admin", "manager"]);
+    await requireRole(ctx, ["admin", "manager", "customer_service"]);
     await ctx.db.delete(args.id);
   },
 });

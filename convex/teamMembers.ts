@@ -7,7 +7,7 @@ const TEAM_ROLES = ["leader", "customer_rep", "customer_rep_asst"] as const;
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    await requireRole(ctx, ["admin", "manager"]);
+    await requireRole(ctx, ["admin", "manager", "customer_service"]);
     return await ctx.db.query("teamMembers").collect();
   },
 });
@@ -32,7 +32,7 @@ export const create = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ["admin", "manager"]);
+    await requireRole(ctx, ["admin", "manager", "customer_service"]);
     return await ctx.db.insert("teamMembers", {
       name: args.name,
       shift: args.shift,
@@ -55,7 +55,7 @@ export const update = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ["admin", "manager"]);
+    await requireRole(ctx, ["admin", "manager", "customer_service"]);
     await ctx.db.patch(args.id, {
       name: args.name,
       shift: args.shift,
@@ -67,7 +67,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id("teamMembers") },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ["admin", "manager"]);
+    await requireRole(ctx, ["admin", "manager", "customer_service"]);
     await ctx.db.patch(args.id, { isActive: false });
   },
 });
@@ -75,7 +75,7 @@ export const remove = mutation({
 export const restore = mutation({
   args: { id: v.id("teamMembers") },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ["admin", "manager"]);
+    await requireRole(ctx, ["admin", "manager", "customer_service"]);
     await ctx.db.patch(args.id, { isActive: true });
   },
 });
