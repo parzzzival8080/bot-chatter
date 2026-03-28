@@ -272,6 +272,9 @@ export function LiveChatInbox({ currentUser }: Props) {
                       {chat.source && (
                         <p className="truncate text-xs text-muted-foreground">🌐 {chat.source}</p>
                       )}
+                      {(chat as any).claimedByName && (
+                        <p className="text-xs text-muted-foreground">👤 {(chat as any).claimedByName}</p>
+                      )}
                     </div>
                   </div>
                   <span className={cn("flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium", STATUS_COLORS[chat.status])}>
@@ -357,7 +360,7 @@ export function LiveChatInbox({ currentUser }: Props) {
             <div className="border-b bg-green-50 px-5 py-1.5 text-xs text-green-700">
               {selectedChat.claimedBy === currentUser._id
                 ? "You are handling this chat"
-                : `Claimed by another agent`}
+                : `Claimed by ${(selectedChat as any).claimedByName ?? "another agent"}`}
             </div>
           )}
 

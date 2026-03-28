@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { ClipboardList, UserCheck, CheckCircle } from "lucide-react";
+import { ClipboardList, UserCheck, CheckCircle, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 function getTypeIcon(type: string) {
@@ -14,6 +14,8 @@ function getTypeIcon(type: string) {
       return <UserCheck className="h-4 w-4 text-yellow-500 shrink-0" />;
     case "task_completed":
       return <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />;
+    case "live_chat":
+      return <MessageCircle className="h-4 w-4 text-purple-500 shrink-0" />;
     default:
       return <ClipboardList className="h-4 w-4 text-muted-foreground shrink-0" />;
   }

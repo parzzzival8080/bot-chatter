@@ -58,7 +58,8 @@ export default defineSchema({
     userId: v.id("users"),
     type: v.string(),
     message: v.string(),
-    taskId: v.id("tasks"),
+    taskId: v.optional(v.id("tasks")),
+    chatId: v.optional(v.id("liveChats")),
     isRead: v.boolean(),
     createdAt: v.number(),
   })

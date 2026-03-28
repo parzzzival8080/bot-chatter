@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { requireRole, requireAuth } from "./lib/auth";
 
 // ── Client-facing (no auth) ────────────────────────────────────────────────
@@ -26,6 +27,11 @@ export const startSession = mutation({
       event: "chat_started",
       details: `Email: ${args.email}${args.uid ? `, UID: ${args.uid}` : ""}${args.source ? `, Source: ${args.source}` : ""}`,
       createdAt: now,
+    });
+    // Notify admins and customer_service
+    await ctx.scheduler.runAfter(0, internal.notifications.createForLiveChat, {
+      chatId,
+      message: `New live chat from ${args.email}${args.source ? ` (${args.source})` : ""}`,
     });
     return chatId;
   },
@@ -95,7 +101,14 @@ export const getAllChats = query({
   handler: async (ctx) => {
     await requireRole(ctx, ["admin", "customer_service"]);
     const chats = await ctx.db.query("liveChats").order("desc").collect();
-    return chats;
+    return await Promise.all(
+      chats.map(async (chat) => ({
+        ...chat,
+        claimedByName: chat.claimedBy
+          ? (await ctx.db.get(chat.claimedBy))?.name ?? null
+          : null,
+      }))
+    );
   },
 });
 

@@ -33,6 +33,33 @@ export const createForRole = internalMutation({
 });
 
 /**
+ * Create notifications for admins and customer_service when a new live chat starts.
+ */
+export const createForLiveChat = internalMutation({
+  args: {
+    chatId: v.id("liveChats"),
+    message: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const allUsers = await ctx.db.query("users").collect();
+    const matchingUsers = allUsers.filter(
+      (user) => user.role === "admin" || user.role === "customer_service"
+    );
+
+    for (const user of matchingUsers) {
+      await ctx.db.insert("notifications", {
+        userId: user._id,
+        type: "live_chat",
+        message: args.message,
+        chatId: args.chatId,
+        isRead: false,
+        createdAt: Date.now(),
+      });
+    }
+  },
+});
+
+/**
  * List notifications for the current user, ordered by most recent first.
  */
 export const listForUser = query({
