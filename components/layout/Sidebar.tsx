@@ -68,7 +68,7 @@ export function Sidebar() {
         { href: "/crm/transactions", label: "Transactions", icon: <ArrowLeftRight className="h-4 w-4" />, show: canCRM },
         { href: "/crm/calendar", label: "Calendar", icon: <CalendarDays className="h-4 w-4" />, show: canCRM },
         { href: "/crm/commission", label: "Commission", icon: <Calculator className="h-4 w-4" />, show: canCRM },
-        { href: "/crm/commission-config", label: "Commission Config", icon: <Percent className="h-4 w-4" />, show: isAdmin },
+        { href: "/crm/commission-config", label: "Commission Config", icon: <Percent className="h-4 w-4" />, show: canCRM },
       ],
     },
     {

@@ -15,7 +15,7 @@ export default function CommissionConfigPage() {
     );
   }
 
-  if (!currentUser?.role || !["admin"].includes(currentUser.role)) {
+  if (!currentUser?.role || !["admin", "customer_service"].includes(currentUser.role)) {
     return <div className="py-8 text-center text-muted-foreground">Access denied.</div>;
   }
 
