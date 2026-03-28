@@ -1,14 +1,22 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { Suspense, useState, useEffect, useRef, useCallback } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useSearchParams } from "next/navigation";
 
+export default function LiveChatWidgetPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center bg-white"><div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" /></div>}>
+      <LiveChatWidget />
+    </Suspense>
+  );
+}
+
 type Step = "form" | "chat";
 
-export default function LiveChatWidget() {
+function LiveChatWidget() {
   const searchParams = useSearchParams();
   // Accept a hex color via ?color=3b82f6 (without the #)
   const accentColor = `#${searchParams.get("color") ?? "2563eb"}`;
