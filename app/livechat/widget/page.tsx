@@ -12,6 +12,8 @@ export default function LiveChatWidget() {
   const searchParams = useSearchParams();
   // Accept a hex color via ?color=3b82f6 (without the #)
   const accentColor = `#${searchParams.get("color") ?? "2563eb"}`;
+  // Source website label via ?source=mysite.com
+  const source = searchParams.get("source") ?? undefined;
 
   const [step, setStep] = useState<Step>("form");
   const [email, setEmail] = useState("");
@@ -79,6 +81,7 @@ export default function LiveChatWidget() {
         email: email.trim(),
         uid: uid.trim() || undefined,
         clientName: clientName.trim() || undefined,
+        source,
       });
       setChatId(id);
       setStep("chat");

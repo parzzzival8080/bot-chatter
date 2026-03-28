@@ -269,6 +269,9 @@ export function LiveChatInbox({ currentUser }: Props) {
                       {chat.uid && (
                         <p className="text-xs text-muted-foreground">UID: {chat.uid}</p>
                       )}
+                      {chat.source && (
+                        <p className="truncate text-xs text-muted-foreground">🌐 {chat.source}</p>
+                      )}
                     </div>
                   </div>
                   <span className={cn("flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium", STATUS_COLORS[chat.status])}>
@@ -301,6 +304,7 @@ export function LiveChatInbox({ currentUser }: Props) {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>{selectedChat.email}</span>
                   {selectedChat.uid && <span>· UID: <span className="font-medium text-foreground">{selectedChat.uid}</span></span>}
+                  {selectedChat.source && <span>· 🌐 {selectedChat.source}</span>}
                 </div>
               </div>
             </div>

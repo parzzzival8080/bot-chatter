@@ -9,6 +9,7 @@ export const startSession = mutation({
     email: v.string(),
     uid: v.optional(v.string()),
     clientName: v.optional(v.string()),
+    source: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -16,13 +17,14 @@ export const startSession = mutation({
       email: args.email,
       uid: args.uid,
       clientName: args.clientName,
+      source: args.source,
       status: "waiting",
       createdAt: now,
     });
     await ctx.db.insert("liveChatAuditLog", {
       chatId,
       event: "chat_started",
-      details: `Email: ${args.email}${args.uid ? `, UID: ${args.uid}` : ""}`,
+      details: `Email: ${args.email}${args.uid ? `, UID: ${args.uid}` : ""}${args.source ? `, Source: ${args.source}` : ""}`,
       createdAt: now,
     });
     return chatId;

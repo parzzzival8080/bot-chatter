@@ -138,6 +138,7 @@ export default defineSchema({
     email: v.string(),
     uid: v.optional(v.string()),
     clientName: v.optional(v.string()),
+    source: v.optional(v.string()),
     status: v.union(v.literal("waiting"), v.literal("active"), v.literal("closed")),
     claimedBy: v.optional(v.id("users")),
     claimedAt: v.optional(v.number()),
