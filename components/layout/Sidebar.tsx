@@ -21,6 +21,7 @@ import {
   CalendarDays,
   PanelLeftClose,
   PanelLeft,
+  Headphones,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,7 @@ export function Sidebar() {
     {
       label: "CRM",
       items: [
+        { href: "/crm/livechat", label: "Live Chat", icon: <Headphones className="h-4 w-4" />, show: canCRM },
         { href: "/crm/team", label: "Team Members", icon: <UsersRound className="h-4 w-4" />, show: canCRM },
         { href: "/crm/customers", label: "Customers", icon: <UserCheck className="h-4 w-4" />, show: canCRM },
         { href: "/crm/transactions", label: "Transactions", icon: <ArrowLeftRight className="h-4 w-4" />, show: canCRM },

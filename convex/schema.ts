@@ -133,4 +133,45 @@ export default defineSchema({
     value: v.string(),
     updatedAt: v.number(),
   }).index("by_key", ["key"]),
+
+  liveChats: defineTable({
+    email: v.string(),
+    uid: v.optional(v.string()),
+    clientName: v.optional(v.string()),
+    status: v.union(v.literal("waiting"), v.literal("active"), v.literal("closed")),
+    claimedBy: v.optional(v.id("users")),
+    claimedAt: v.optional(v.number()),
+    closedAt: v.optional(v.number()),
+    closedBy: v.optional(v.id("users")),
+    createdAt: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_email", ["email"])
+    .index("by_claimedBy", ["claimedBy"]),
+
+  liveMessages: defineTable({
+    chatId: v.id("liveChats"),
+    sender: v.union(v.literal("client"), v.literal("supervisor")),
+    senderId: v.optional(v.id("users")),
+    senderName: v.optional(v.string()),
+    text: v.string(),
+    createdAt: v.number(),
+  }).index("by_chatId", ["chatId"]),
+
+  liveChatAuditLog: defineTable({
+    chatId: v.id("liveChats"),
+    event: v.union(
+      v.literal("chat_started"),
+      v.literal("claimed"),
+      v.literal("unclaimed"),
+      v.literal("transferred"),
+      v.literal("message_sent"),
+      v.literal("closed"),
+      v.literal("reopened")
+    ),
+    performedBy: v.optional(v.id("users")),
+    performedByName: v.optional(v.string()),
+    details: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_chatId", ["chatId"]),
 });

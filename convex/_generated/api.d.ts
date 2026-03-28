@@ -15,6 +15,7 @@ import type * as commissionRules from "../commissionRules.js";
 import type * as customerTransactions from "../customerTransactions.js";
 import type * as customers from "../customers.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as liveChat from "../liveChat.js";
 import type * as notifications from "../notifications.js";
 import type * as platforms from "../platforms.js";
 import type * as reminders from "../reminders.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   customerTransactions: typeof customerTransactions;
   customers: typeof customers;
   "lib/auth": typeof lib_auth;
+  liveChat: typeof liveChat;
   notifications: typeof notifications;
   platforms: typeof platforms;
   reminders: typeof reminders;
