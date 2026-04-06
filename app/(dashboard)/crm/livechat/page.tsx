@@ -15,7 +15,7 @@ export default function LiveChatPage() {
     );
   }
 
-  if (!currentUser?.role || !["admin", "customer_service"].includes(currentUser.role)) {
+  if (!currentUser?.role || !["admin", "customer_service", "manager"].includes(currentUser.role)) {
     return <div className="py-8 text-center text-muted-foreground">Access denied.</div>;
   }
 

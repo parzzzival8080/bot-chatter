@@ -1,5 +1,6 @@
 import RoleGuard from "@/components/layout/RoleGuard";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { LiveChatNotifier } from "@/components/notifications/LiveChatNotifier";
 
 export default function DashboardLayout({
   children,
@@ -14,6 +15,7 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+      <LiveChatNotifier />
     </RoleGuard>
   );
 }

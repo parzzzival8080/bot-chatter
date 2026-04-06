@@ -43,7 +43,7 @@ export const createForLiveChat = internalMutation({
   handler: async (ctx, args) => {
     const allUsers = await ctx.db.query("users").collect();
     const matchingUsers = allUsers.filter(
-      (user) => user.role === "admin" || user.role === "customer_service"
+      (user) => user.role === "admin" || user.role === "customer_service" || user.role === "manager"
     );
 
     for (const user of matchingUsers) {

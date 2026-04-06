@@ -99,7 +99,7 @@ export const getChatStatus = query({
 export const getAllChats = query({
   args: {},
   handler: async (ctx) => {
-    await requireRole(ctx, ["admin", "customer_service"]);
+    await requireRole(ctx, ["admin", "customer_service", "manager"]);
     const chats = await ctx.db.query("liveChats").order("desc").collect();
     return await Promise.all(
       chats.map(async (chat) => ({
@@ -115,7 +115,7 @@ export const getAllChats = query({
 export const getWaitingChats = query({
   args: {},
   handler: async (ctx) => {
-    await requireRole(ctx, ["admin", "customer_service"]);
+    await requireRole(ctx, ["admin", "customer_service", "manager"]);
     return await ctx.db
       .query("liveChats")
       .withIndex("by_status", (q) => q.eq("status", "waiting"))
@@ -127,7 +127,7 @@ export const getWaitingChats = query({
 export const getMyActiveChats = query({
   args: {},
   handler: async (ctx) => {
-    const user = await requireRole(ctx, ["admin", "customer_service"]);
+    const user = await requireRole(ctx, ["admin", "customer_service", "manager"]);
     return await ctx.db
       .query("liveChats")
       .withIndex("by_claimedBy", (q) => q.eq("claimedBy", user._id))
@@ -138,7 +138,7 @@ export const getMyActiveChats = query({
 export const generateSupervisorUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    await requireRole(ctx, ["admin", "customer_service"]);
+    await requireRole(ctx, ["admin", "customer_service", "manager"]);
     return await ctx.storage.generateUploadUrl();
   },
 });
@@ -146,7 +146,7 @@ export const generateSupervisorUploadUrl = mutation({
 export const getChatMessages = query({
   args: { chatId: v.id("liveChats") },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ["admin", "customer_service"]);
+    await requireRole(ctx, ["admin", "customer_service", "manager"]);
     const msgs = await ctx.db
       .query("liveMessages")
       .withIndex("by_chatId", (q) => q.eq("chatId", args.chatId))
@@ -164,7 +164,7 @@ export const getChatMessages = query({
 export const claimChat = mutation({
   args: { chatId: v.id("liveChats") },
   handler: async (ctx, args) => {
-    const user = await requireRole(ctx, ["admin", "customer_service"]);
+    const user = await requireRole(ctx, ["admin", "customer_service", "manager"]);
     const chat = await ctx.db.get(args.chatId);
     if (!chat) throw new Error("Chat not found");
     if (chat.status === "closed") throw new Error("Chat is already closed");
@@ -190,7 +190,7 @@ export const claimChat = mutation({
 export const unclaimChat = mutation({
   args: { chatId: v.id("liveChats") },
   handler: async (ctx, args) => {
-    const user = await requireRole(ctx, ["admin", "customer_service"]);
+    const user = await requireRole(ctx, ["admin", "customer_service", "manager"]);
     const chat = await ctx.db.get(args.chatId);
     if (!chat) throw new Error("Chat not found");
 
@@ -214,7 +214,7 @@ export const unclaimChat = mutation({
 export const transferChat = mutation({
   args: { chatId: v.id("liveChats"), toUserId: v.id("users") },
   handler: async (ctx, args) => {
-    const user = await requireRole(ctx, ["admin", "customer_service"]);
+    const user = await requireRole(ctx, ["admin", "customer_service", "manager"]);
     const chat = await ctx.db.get(args.chatId);
     if (!chat) throw new Error("Chat not found");
 
@@ -245,7 +245,7 @@ export const sendSupervisorMessage = mutation({
     imageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
-    const user = await requireRole(ctx, ["admin", "customer_service"]);
+    const user = await requireRole(ctx, ["admin", "customer_service", "manager"]);
     const chat = await ctx.db.get(args.chatId);
     if (!chat || chat.status === "closed") throw new Error("Chat not found or closed");
 
@@ -264,7 +264,7 @@ export const sendSupervisorMessage = mutation({
 export const closeChat = mutation({
   args: { chatId: v.id("liveChats") },
   handler: async (ctx, args) => {
-    const user = await requireRole(ctx, ["admin", "customer_service"]);
+    const user = await requireRole(ctx, ["admin", "customer_service", "manager"]);
     const chat = await ctx.db.get(args.chatId);
     if (!chat) throw new Error("Chat not found");
 
@@ -288,7 +288,7 @@ export const closeChat = mutation({
 export const reopenChat = mutation({
   args: { chatId: v.id("liveChats") },
   handler: async (ctx, args) => {
-    const user = await requireRole(ctx, ["admin", "customer_service"]);
+    const user = await requireRole(ctx, ["admin", "customer_service", "manager"]);
     const chat = await ctx.db.get(args.chatId);
     if (!chat) throw new Error("Chat not found");
 
@@ -328,7 +328,7 @@ export const getAuditLog = query({
 export const getSupervisors = query({
   args: {},
   handler: async (ctx) => {
-    await requireRole(ctx, ["admin", "customer_service"]);
+    await requireRole(ctx, ["admin", "customer_service", "manager"]);
     const users = await ctx.db.query("users").collect();
     return users.filter(
       (u) => u.role === "admin" || u.role === "customer_service"
