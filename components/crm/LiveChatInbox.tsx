@@ -30,6 +30,7 @@ import {
   Send,
   ArrowLeftRight,
   History,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -64,6 +65,7 @@ const AUDIT_ICONS: Record<string, string> = {
 
 export function LiveChatInbox({ currentUser }: Props) {
   const [tab, setTab] = useState<TabKey>("waiting");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedChatId, setSelectedChatId] = useState<Id<"liveChats"> | null>(null);
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
@@ -121,11 +123,23 @@ export function LiveChatInbox({ currentUser }: Props) {
   const reopenChat = useMutation(api.liveChat.reopenChat);
   const transferChat = useMutation(api.liveChat.transferChat);
 
+  const q = searchQuery.trim().toLowerCase();
   const filteredChats = allChats.filter((c) => {
-    if (tab === "waiting") return c.status === "waiting";
-    if (tab === "active") return c.status === "active" && c.claimedBy === currentUser._id;
-    if (tab === "closed") return c.status === "closed";
-    return true; // "all"
+    // Tab filter (when not searching)
+    if (!q) {
+      if (tab === "waiting") return c.status === "waiting";
+      if (tab === "active") return c.status === "active" && c.claimedBy === currentUser._id;
+      if (tab === "closed") return c.status === "closed";
+      return true; // "all"
+    }
+    // Search across all chats regardless of tab
+    return (
+      c.email.toLowerCase().includes(q) ||
+      c.clientName?.toLowerCase().includes(q) ||
+      c.uid?.toLowerCase().includes(q) ||
+      c.source?.toLowerCase().includes(q) ||
+      (c as any).claimedByName?.toLowerCase().includes(q)
+    );
   });
 
   const selectedChat = allChats.find((c) => c._id === selectedChatId) ?? null;
@@ -221,6 +235,28 @@ export function LiveChatInbox({ currentUser }: Props) {
         <div className="border-b px-4 py-3">
           <h2 className="text-base font-semibold">Live Chat</h2>
           <p className="text-xs text-muted-foreground">Incoming client conversations</p>
+        </div>
+
+        {/* Search bar */}
+        <div className="border-b px-3 py-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by name, email, UID…"
+              className="w-full rounded-md border bg-background px-7 py-1.5 text-xs outline-none transition focus:border-primary focus:ring-1 focus:ring-primary/20"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                ×
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="border-b px-3 py-2">
