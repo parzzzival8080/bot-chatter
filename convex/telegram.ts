@@ -3,7 +3,10 @@ import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 
 export const sendMessage = internalAction({
-  args: { message: v.string() },
+  args: {
+    message: v.string(),
+    chatIdKey: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     // Read token from settings table, fallback to env var
     const tokenSetting = await ctx.runQuery(internal.settings.getByKey, {
@@ -12,10 +15,12 @@ export const sendMessage = internalAction({
     const token = tokenSetting?.value ?? process.env.TELEGRAM_BOT_TOKEN;
 
     // Read chat ID from settings table, fallback to env var
+    // chatIdKey allows routing to a different chat (e.g. TELEGRAM_LIVECHAT_CHAT_ID)
+    const key = args.chatIdKey ?? "TELEGRAM_CHAT_ID";
     const chatIdSetting = await ctx.runQuery(internal.settings.getByKey, {
-      key: "TELEGRAM_CHAT_ID",
+      key,
     });
-    const chatId = chatIdSetting?.value ?? process.env.TELEGRAM_CHAT_ID;
+    const chatId = chatIdSetting?.value ?? process.env[key];
 
     if (!token || !chatId) {
       console.error(

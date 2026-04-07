@@ -22,18 +22,23 @@ export function TelegramSettings() {
   const chatIdDisplay = useQuery(api.settings.getForDisplay, {
     key: "TELEGRAM_CHAT_ID",
   });
+  const liveChatIdDisplay = useQuery(api.settings.getForDisplay, {
+    key: "TELEGRAM_LIVECHAT_CHAT_ID",
+  });
 
   const setSetting = useMutation(api.settings.set);
   const testTelegram = useMutation(api.settings.testTelegram);
 
   const [token, setToken] = useState("");
   const [chatId, setChatId] = useState("");
+  const [liveChatId, setLiveChatId] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
 
   // Show placeholder text from current values
   const tokenPlaceholder = tokenDisplay?.value ?? "Enter bot API token";
   const chatIdPlaceholder = chatIdDisplay?.value ?? "Enter chat ID";
+  const liveChatIdPlaceholder = liveChatIdDisplay?.value ?? "Enter live chat group chat ID";
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -49,6 +54,11 @@ export function TelegramSettings() {
           setSetting({ key: "TELEGRAM_CHAT_ID", value: chatId.trim() })
         );
       }
+      if (liveChatId.trim()) {
+        promises.push(
+          setSetting({ key: "TELEGRAM_LIVECHAT_CHAT_ID", value: liveChatId.trim() })
+        );
+      }
       if (promises.length === 0) {
         toast.error("No changes to save");
         setIsSaving(false);
@@ -57,6 +67,7 @@ export function TelegramSettings() {
       await Promise.all(promises);
       setToken("");
       setChatId("");
+      setLiveChatId("");
       toast.success("Telegram settings saved successfully");
     } catch {
       toast.error("Failed to save Telegram settings");
@@ -104,7 +115,7 @@ export function TelegramSettings() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="telegram-chat-id">Chat ID</Label>
+          <Label htmlFor="telegram-chat-id">Tasks Chat ID</Label>
           <Input
             id="telegram-chat-id"
             type="text"
@@ -115,6 +126,22 @@ export function TelegramSettings() {
           {chatIdDisplay && (
             <p className="text-xs text-muted-foreground">
               Current: {chatIdDisplay.value}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="telegram-livechat-id">Live Chat Group ID</Label>
+          <Input
+            id="telegram-livechat-id"
+            type="text"
+            placeholder={liveChatIdPlaceholder}
+            value={liveChatId}
+            onChange={(e) => setLiveChatId(e.target.value)}
+          />
+          {liveChatIdDisplay && (
+            <p className="text-xs text-muted-foreground">
+              Current: {liveChatIdDisplay.value}
             </p>
           )}
         </div>

@@ -33,6 +33,21 @@ export const startSession = mutation({
       chatId,
       message: `New live chat from ${args.email}${args.source ? ` (${args.source})` : ""}`,
     });
+    // Telegram notification
+    const lines = [
+      `🟡 <b>[NEW CHAT STARTED]</b>`,
+      ``,
+      `👤 Client: ${args.clientName ?? args.email}`,
+      `📧 Email: ${args.email}`,
+      args.uid ? `🆔 UID: ${args.uid}` : null,
+      args.source ? `🌐 Source: ${args.source}` : null,
+      ``,
+      `⏳ Status: Waiting for an agent…`,
+    ].filter((l) => l !== null);
+    await ctx.scheduler.runAfter(0, internal.telegram.sendMessage, {
+      message: lines.join("\n"),
+      chatIdKey: "TELEGRAM_LIVECHAT_CHAT_ID",
+    });
     return chatId;
   },
 });
@@ -61,6 +76,13 @@ export const sendClientMessage = mutation({
       text: args.text,
       imageId: args.imageId,
       createdAt: Date.now(),
+    });
+    // Telegram
+    const label = chat.clientName ?? chat.email;
+    const body = args.text || (args.imageId ? "📷 [image]" : "");
+    await ctx.scheduler.runAfter(0, internal.telegram.sendMessage, {
+      message: `💬 <b>[CLIENT MESSAGE]</b>\n\n👤 From: ${label}\n\n${body}`,
+      chatIdKey: "TELEGRAM_LIVECHAT_CHAT_ID",
     });
   },
 });
@@ -184,6 +206,11 @@ export const claimChat = mutation({
       details: `Claimed by ${user.name}`,
       createdAt: now,
     });
+    const label = chat.clientName ?? chat.email;
+    await ctx.scheduler.runAfter(0, internal.telegram.sendMessage, {
+      message: `🟢 <b>[CHAT CLAIMED]</b>\n\n🙋 Agent: ${user.name}\n👤 Client: ${label}`,
+      chatIdKey: "TELEGRAM_LIVECHAT_CHAT_ID",
+    });
   },
 });
 
@@ -235,6 +262,11 @@ export const transferChat = mutation({
       details: `Transferred from ${user.name} to ${toUser.name}`,
       createdAt: now,
     });
+    const label = chat.clientName ?? chat.email;
+    await ctx.scheduler.runAfter(0, internal.telegram.sendMessage, {
+      message: `🔄 <b>[CHAT TRANSFERRED]</b>\n\n👤 Client: ${label}\n➡️ From: ${user.name}\n🙋 To: ${toUser.name}`,
+      chatIdKey: "TELEGRAM_LIVECHAT_CHAT_ID",
+    });
   },
 });
 
@@ -257,6 +289,12 @@ export const sendSupervisorMessage = mutation({
       text: args.text,
       imageId: args.imageId,
       createdAt: Date.now(),
+    });
+    const label = chat.clientName ?? chat.email;
+    const body = args.text || (args.imageId ? "📷 [image]" : "");
+    await ctx.scheduler.runAfter(0, internal.telegram.sendMessage, {
+      message: `↩️ <b>[AGENT REPLY]</b>\n\n🙋 Agent: ${user.name}\n👤 To: ${label}\n\n${body}`,
+      chatIdKey: "TELEGRAM_LIVECHAT_CHAT_ID",
     });
   },
 });
@@ -281,6 +319,11 @@ export const closeChat = mutation({
       performedByName: user.name,
       details: `Closed by ${user.name}`,
       createdAt: now,
+    });
+    const label = chat.clientName ?? chat.email;
+    await ctx.scheduler.runAfter(0, internal.telegram.sendMessage, {
+      message: `🔴 <b>[CHAT CLOSED]</b>\n\n🙋 Agent: ${user.name}\n👤 Client: ${label}`,
+      chatIdKey: "TELEGRAM_LIVECHAT_CHAT_ID",
     });
   },
 });
