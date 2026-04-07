@@ -393,7 +393,7 @@ export function LiveChatInbox({ currentUser }: Props) {
                       className="mb-1.5 max-h-48 w-auto rounded-lg object-contain"
                     />
                   )}
-                  {msg.text && <p>{msg.text}</p>}
+                  {msg.text && <p className="whitespace-pre-wrap">{msg.text}</p>}
                   <div className={cn("mt-0.5 text-right text-[10px] opacity-60")}>
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </div>
@@ -439,12 +439,13 @@ export function LiveChatInbox({ currentUser }: Props) {
                   className="hidden"
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageFile(f); e.target.value = ""; }}
                 />
-                <input
+                <textarea
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  placeholder={selectedChat.claimedBy === currentUser._id ? "Type a reply or paste an image…" : "Claim this chat to reply"}
+                  placeholder={selectedChat.claimedBy === currentUser._id ? "Type a reply or paste an image…  (Shift+Enter for new line)" : "Claim this chat to reply"}
                   disabled={selectedChat.claimedBy !== currentUser._id}
-                  className="flex-1 rounded-xl border px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  rows={1}
+                  className="flex-1 resize-none rounded-xl border px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 max-h-32"
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(e); } }}
                 />
                 <Button

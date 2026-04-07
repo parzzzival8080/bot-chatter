@@ -248,7 +248,7 @@ function LiveChatWidget() {
                   className="mb-1.5 max-h-48 w-auto rounded-lg object-contain"
                 />
               )}
-              {msg.text && <p>{msg.text}</p>}
+              {msg.text && <p className="whitespace-pre-wrap">{msg.text}</p>}
               <div className={`mt-0.5 text-right text-[10px] ${msg.sender === "client" ? "text-white/60" : "text-gray-400"}`}>
                 {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </div>
@@ -297,11 +297,12 @@ function LiveChatWidget() {
               className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageFile(f); e.target.value = ""; }}
             />
-            <input
+            <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Type a message or paste an image…"
-              className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-gray-200"
+              placeholder="Type a message or paste an image…  (Shift+Enter for new line)"
+              rows={1}
+              className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-gray-200 max-h-32"
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(e); } }}
             />
             <button
