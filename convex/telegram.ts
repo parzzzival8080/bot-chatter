@@ -74,3 +74,63 @@ export const sendMessage = internalAction({
     );
   },
 });
+
+export const sendPhoto = internalAction({
+  args: {
+    photoUrl: v.string(),
+    caption: v.string(),
+    chatIdKey: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const tokenSetting = await ctx.runQuery(internal.settings.getByKey, {
+      key: "TELEGRAM_BOT_TOKEN",
+    });
+    const token = tokenSetting?.value ?? process.env.TELEGRAM_BOT_TOKEN;
+
+    const key = args.chatIdKey ?? "TELEGRAM_CHAT_ID";
+    const chatIdSetting = await ctx.runQuery(internal.settings.getByKey, {
+      key,
+    });
+    const chatId = chatIdSetting?.value ?? process.env[key];
+
+    if (!token || !chatId) {
+      console.error("Telegram credentials not configured.");
+      return;
+    }
+
+    const url = `https://api.telegram.org/bot${token}/sendPhoto`;
+    const body = JSON.stringify({
+      chat_id: chatId,
+      photo: args.photoUrl,
+      caption: args.caption,
+      parse_mode: "HTML",
+    });
+
+    const maxAttempts = 3;
+    const delays = [1000, 2000, 4000];
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body,
+        });
+        if (response.ok) return;
+        const errorBody = await response.text();
+        console.error(
+          `Telegram sendPhoto error (attempt ${attempt + 1}/${maxAttempts}): ${response.status} ${errorBody}`
+        );
+      } catch (error) {
+        console.error(
+          `Telegram sendPhoto failed (attempt ${attempt + 1}/${maxAttempts}):`,
+          error
+        );
+      }
+      if (attempt < maxAttempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
+      }
+    }
+    console.error("Telegram photo delivery failed after all retries.");
+  },
+});
